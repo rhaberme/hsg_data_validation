@@ -1,0 +1,14 @@
+test,Any,expertise_range,gradient_range,index_dupplicated,measuring_range,measuring_range,measuring_range,missing_test,multivariate_range,physical_range,physical_range,physical_range,timestamp_consistency
+data_parameter,,app1_conc [mg/l],app1_conc [mg/l],Date&Time,app1_conc [mg/l],app1_h [m],app1_t_water [C],app1_conc [mg/l],app1_conc [mg/l],app1_conc [mg/l],app1_h [m],app1_t_water [C],Date&Time
+A,531.0,531,0,0,0,0,0,0,0,0,0,0,0
+B,1.0,0,0,0,0,0,0,0,0,1,1,1,0
+C,736.0,0,0,0,2,1,736,0,0,0,0,0,0
+D,1.0,0,0,0,0,0,0,1,0,0,0,0,0
+E,0.0,0,0,0,0,0,0,0,0,0,0,0,0
+F,0.0,0,0,0,0,0,0,0,0,0,0,0,0
+G,11.0,0,11,0,0,0,0,0,0,0,0,0,0
+H,0.0,0,0,0,0,0,0,0,0,0,0,0,0
+I,0.0,0,0,0,0,0,0,0,0,0,0,0,0
+J,0.0,0,0,0,0,0,0,0,0,0,0,0,0
+K,2.0,0,0,0,0,0,0,0,0,0,0,0,2
+None,736.0,205,725,736,734,735,0,735,736,735,735,735,734
