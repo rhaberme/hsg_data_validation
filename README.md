@@ -20,7 +20,7 @@ Short description on how to install and run the webapp locally.
 3. Install all requirements: `pip install -r Webtool/requirements.txt`
 
 ### Running the web app
-Run the webapp using `streamlit run Webapp/Start.py`
-- If this doesn't work use `python -m streamlit run Webapp/Start.py`
+Run the webapp using `streamlit run Webtool/Start.py`
+- If this doesn't work use `python -m streamlit run Webtool/Start.py`
 
 Then, a browser tab with the webapp should open automatically 
