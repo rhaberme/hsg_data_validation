@@ -13,7 +13,7 @@ Short description on how to install and run the webapp locally.
        
      where `<venv>` is the path where the virtual environment is to be located
    - Windows (in the CMD)
-     - Creation: `python -m venv <venv>`
+     - Creation: `python -m venv <venv>` 
      - Activation: `.\<venv>\Scripts\activate`
      
      where `<venv>` is the path where the virtual environment is to be located
