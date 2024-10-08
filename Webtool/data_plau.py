@@ -37,5 +37,5 @@ def check_drift(df_data, value_col="value", chunk_split=4):
     pass
 
 
-def check_for_continuity(df_data):
+def check_for_jumps(df_data):
     pass
