@@ -39,19 +39,3 @@ def check_drift(df_data, value_col="value", chunk_split=4):
 
 def check_for_continuity(df_data):
     pass
-
-
-def check_missing_days(df):
-    pass
-
-
-def get_min_interval(df):
-    pass
-
-
-def check_outliers(df, column_name='value'):
-    pass
-
-
-def get_height_peaks(df, column_name='value'):
-    pass
