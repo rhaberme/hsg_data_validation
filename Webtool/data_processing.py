@@ -155,5 +155,10 @@ def replace_status_informations_with_binary(df_data, allowed_status=None, status
     return df_data_copy
 
 
+def transform_to_higher_freq(df_data: pd.DataFrame, value_col_name: str = "value",
+                             current_freq: int = 10, output_freq: int = 1):
+    pass
+
+
 
 
