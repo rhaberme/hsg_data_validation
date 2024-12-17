@@ -135,22 +135,11 @@ if check_constancy:
 check_range = col1.checkbox('Spanne',
                             help="")
 if check_range:
-    if chosen_measurement and chosen_measurement.measurement_type == 'Höhenstand':
-        unit = "[m]"
-    elif chosen_measurement and chosen_measurement.measurement_type == "Niederschlag":
-        unit = "[mm]"
-    elif not chosen_measurement:
-        unit = ""
-    else:
-        unit = "[l/s]"
     exp_ = col2.expander("Einstellungen 'Spanne'")
     with exp_:
 
-        st.session_state['range_check_lower_border'] = st.number_input("Unterer Grenzwert " + unit, max_value=5.00,
-                                                                       value=0.00,
-                                                                       step=0.01)
-        st.session_state['range_check_upper_border'] = st.number_input("Oberer Grenzwert " + unit, min_value=-100.00,
-                                                                       max_value=20.00, value=4.00, step=0.01)
+        st.session_state['range_check_lower_border'] = st.number_input("Unterer Grenzwert")
+        st.session_state['range_check_upper_border'] = st.number_input("Oberer Grenzwert")
 
         # st.session_state['r1_check_outlier'], st.session_state['r3_check_outlier'] = \
         #    st.slider('Erlaubte Messwertspanne', min_value=-5.0, max_value=20.0, value=(0.2, 4.0), step=0.1)

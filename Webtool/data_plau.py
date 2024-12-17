@@ -17,6 +17,7 @@
 import numpy as np
 import pandas as pd
 
+# TODO: All parameters should have defaults
 
 # 1 Lücke
 def check_gaps(df_data, value_col="value", min_border=0.0):
@@ -29,8 +30,10 @@ def check_constancy(df_data, delta, nr_of_sequential_measurements, value_col_nam
 
 
 # 3 Spanne
-def check_range(df_data, upper_border, lower_border, value_col_name="value"):
-    pass
+def check_range(df_data, lower_border = -np.inf, upper_border = np.inf, value_col_name="value"):
+    df_check = pd.DataFrame(np.bitwise_or(df_data[value_col_name] < lower_border, df_data[value_col_name] > upper_border)
+                            , index=df_data.index, columns=["Range Error"])
+    return df_check
 
 
 # 4 Ausreißer

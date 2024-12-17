@@ -48,7 +48,9 @@ def create_df_data_from_csv(filepath: str,
                             status_available: bool = False,
                             status_col_name: str = None,
                             sep: str = ","):
-
+    # TODO: Check for values to be numeric -> Include preprocessing to convert non-numeric to NaN
+    # Do in separate function and call here
+    # Times: Accept whatever pd.read_csv accepts
     if len(date_time_col_name_s) == 2:
         df_data = pd.read_csv(filepath, parse_dates=[date_time_col_name_s], sep=sep)
         dt_col_name = date_time_col_name_s[0] + "_" + date_time_col_name_s[1]
