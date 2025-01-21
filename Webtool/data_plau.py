@@ -17,6 +17,7 @@
 import numpy as np
 import pandas as pd
 
+
 # TODO: All parameters should have defaults
 
 # 1 Lücke
@@ -30,15 +31,51 @@ def check_constancy(df_data, delta, nr_of_sequential_measurements, value_col_nam
 
 
 # 3 Spanne
-def check_range(df_data, lower_border = -np.inf, upper_border = np.inf, value_col_name="value"):
-    df_check = pd.DataFrame(np.bitwise_or(df_data[value_col_name] < lower_border, df_data[value_col_name] > upper_border)
-                            , index=df_data.index, columns=["Range Error"])
+def check_range(df_data, lower_border=-np.inf, upper_border=np.inf, value_col_name="value"):
+    df_check = pd.DataFrame(
+        np.bitwise_or(df_data[value_col_name] < lower_border, df_data[value_col_name] > upper_border)
+        , index=df_data.index, columns=["Range Error"])
     return df_check
 
 
 # 4 Ausreißer
-def check_outlier(df_data, value_col_name="value", r1_perc=None, r3_perc=None):
-    pass
+def check_outlier(df_data, value_col_name="value", method="std_method", threshold_multiplier=3, iqr_multiplier=1.5):
+    if value_col_name not in df_data.columns:
+        raise ValueError(f"Column '{value_col_name}' not in dataframe")
+
+    if method == "std_method":
+        assert threshold_multiplier
+        mean_value = df_data[value_col_name].mean()
+        std_dev = df_data[value_col_name].std()
+
+        upper_limit = mean_value + threshold_multiplier * std_dev
+        lower_limit = mean_value - threshold_multiplier * std_dev
+
+        df_outliers = pd.DataFrame(
+            {
+                "Outlier": (df_data[value_col_name] > upper_limit) | (df_data[value_col_name] < lower_limit)
+            },
+            index=df_data.index
+        )
+    elif method == "iqr_method":
+        q1 = df_data[value_col_name].quantile(0.25)
+        q3 = df_data[value_col_name].quantile(0.75)
+
+        iqr = q3 - q1
+
+        lower_bound = q1 - iqr_multiplier * iqr
+        upper_bound = q3 + iqr_multiplier * iqr
+
+        df_outliers = pd.DataFrame(
+            {
+                "Outlier": (df_data[value_col_name] < lower_bound) | (df_data[value_col_name] > upper_bound)
+            },
+            index=df_data.index
+        )
+    else:
+        raise ValueError(f"{method} is not one of the defined outlier detection methods")
+
+    return df_outliers
 
 
 # 5 Gradient
