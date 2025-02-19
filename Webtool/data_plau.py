@@ -153,8 +153,38 @@ def check_noise(df_data, value_col="value"):
 
 
 # 7 Drift
-def check_drift(df_data, value_col="value", chunk_split=4):
-    pass
+def check_drift(df_data, window=10, threshold=0.1, zero=0,  method="mean", value_col_name="value"):
+    if value_col_name not in df_data.columns:
+        raise ValueError(f"Column '{value_col_name}' not in dataframe")
+
+    if method == "mean": # If maximum difference is too low in the window
+        # Compute rolling mean of the difference
+        rollmean = df_data[value_col_name].diff().rolling(window=window, center=True).mean()
+        # Check if it exceeds the minimum
+        df_drift = pd.DataFrame(
+            {
+                "Drift": (rollmean > threshold)
+            },
+            index=df_data.index
+        )
+        # In the beginning, window is outside and mean is nan -> treat as non-drifting
+        df_drift.iloc[range(window-1)] = False
+    elif method == "zero": # If std is too low in the window
+        # Compute rolling average
+        rollmean = df_data[value_col_name].rolling(window=window, center=True).mean()
+        # Check if it exceeds the minimum
+        df_drift = pd.DataFrame(
+            {
+                "Drift": (abs(rollmean - zero) > threshold)
+            },
+            index=df_data.index
+        )
+        # In the beginning, window is outside and mean is nan -> treat as non-drifting
+        df_drift.iloc[range(window-1)] = False
+    else:
+        raise ValueError(f"{method} is not one of the defined constancy detection methods")
+
+    return df_drift
 
 
 def check_for_jumps(df_data):
