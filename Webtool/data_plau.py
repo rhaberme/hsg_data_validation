@@ -39,8 +39,39 @@ def check_gaps(df_data, custom_missing_values=None):
     return df_gap
 
 # 2 Konstanz
-def check_constancy(df_data, delta, nr_of_sequential_measurements, value_col_name="value"):
-    pass
+def check_constancy(df_data, window=2, max_delta=1e-8, min_std=0, value_col_name="value", method="delta"):
+    if value_col_name not in df_data.columns:
+        raise ValueError(f"Column '{value_col_name}' not in dataframe")
+
+    if method == "delta": # If maximum difference is too low in the window
+        # Compute rolling difference
+        roll = df_data[value_col_name].rolling(window=window, center=True)
+        delta = roll.max() - roll.min()
+        # Check if it exceeds the minimum
+        df_constant = pd.DataFrame(
+            {
+                "Constancy": (delta < max_delta)
+            },
+            index=df_data.index
+        )
+        # In the beginning, window is outside and delta is nan -> treat as non-constant
+        df_constant.iloc[range(window-1)] = False
+    elif method == "std": # If std is too low in the window
+        # Compute rolling std
+        std = df_data[value_col_name].rolling(window=window, center=True).std()
+        # Check if it exceeds the minimum
+        df_constant = pd.DataFrame(
+            {
+                "Constancy": (std < min_std)
+            },
+            index=df_data.index
+        )
+        # In the beginning, window is outside and std is nan -> treat as non-constant
+        df_constant.iloc[range(window-1)] = False
+    else:
+        raise ValueError(f"{method} is not one of the defined constancy detection methods")
+
+    return df_constant
 
 
 # 3 Spanne
