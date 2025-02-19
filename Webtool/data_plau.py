@@ -82,6 +82,26 @@ def check_outlier(df_data, value_col_name="value", method="std_method", threshol
 def check_gradient(df_data, delta=1.5, value_col_name="value"):
     pass
 
+def check_gradients(df_data, value_col_name="value", gradient_threshold=None):
+    if value_col_name not in df_data.columns:
+        raise ValueError(f"Column '{value_col_name}' not in dataframe")
+
+    if gradient_threshold is None:
+        raise ValueError("Gradient_threshold not defined")
+
+    gradients = df_data[value_col_name].diff().abs()
+    df_high_gradients = pd.DataFrame(
+        {
+            "High_Gradient": gradients > gradient_threshold
+        },
+        index=df_data.index
+    )
+
+    # first row will have nan for gradient --> set it to False
+    df_high_gradients.loc[df_high_gradients.index[0], 'High_Gradient'] = False
+
+    return df_high_gradients
+
 
 # 6 Rauschen
 def check_noise(df_data, value_col="value"):
