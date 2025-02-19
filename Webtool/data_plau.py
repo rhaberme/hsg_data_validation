@@ -18,12 +18,25 @@ import numpy as np
 import pandas as pd
 
 
-# TODO: All parameters should have defaults
-
 # 1 Lücke
-def check_gaps(df_data, value_col="value", min_border=0.0):
-    pass
+def check_gaps(df_data, custom_missing_values=None):
+    if custom_missing_values is None:
+        custom_missing_values = []
+    if not isinstance(custom_missing_values, list):
+        custom_missing_values = [custom_missing_values]
 
+    missing_mask = df_data.isna() | df_data.isnull()
+    for value in custom_missing_values:
+        if isinstance(value, (str, int, float)):
+            missing_mask = missing_mask | (df_data == value)
+    df_gap = pd.DataFrame(
+        {
+            "Missing": missing_mask
+        },
+        index=df_data.index
+    )
+
+    return df_gap
 
 # 2 Konstanz
 def check_constancy(df_data, delta, nr_of_sequential_measurements, value_col_name="value"):
