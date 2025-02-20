@@ -57,7 +57,7 @@ def check_constancy(df_data, window=2, threshold=1e-8, min_std=0, value_col_name
             index=df_data.index
         )
         # In the beginning, window is outside and delta is nan -> treat as non-constant
-        df_constant.iloc[range(window-1)] = False
+        df_constant.loc[df_constant.index[range(window-1)], 'Constancy'] = False
     elif method == "std": # If std is too low in the window
         # Compute rolling std
         std = df_data[value_col_name].rolling(window=window, center=True).std()
@@ -69,7 +69,7 @@ def check_constancy(df_data, window=2, threshold=1e-8, min_std=0, value_col_name
             index=df_data.index
         )
         # In the beginning, window is outside and std is nan -> treat as non-constant
-        df_constant.iloc[range(window-1)] = False
+        df_constant.loc[df_constant.index[range(window-1)], 'Constancy'] = False
     else:
         raise ValueError(f"{method} is not one of the defined constancy detection methods")
 
@@ -170,7 +170,7 @@ def check_drift(df_data, window=10, threshold=0.1, zero=0,  method="mean", value
             index=df_data.index
         )
         # In the beginning, window is outside and mean is nan -> treat as non-drifting
-        df_drift.iloc[range(window-1)] = False
+        df_drift.loc[df_drift.index[range(window-1)], 'Drift'] = False
     elif method == "zero": # If std is too low in the window
         # Compute rolling average
         rollmean = df_data[value_col_name].rolling(window=window, center=True).mean()
@@ -182,7 +182,7 @@ def check_drift(df_data, window=10, threshold=0.1, zero=0,  method="mean", value
             index=df_data.index
         )
         # In the beginning, window is outside and mean is nan -> treat as non-drifting
-        df_drift.iloc[range(window-1)] = False
+        df_drift.loc[df_drift.index[range(window-1)], 'Drift'] = False
     else:
         raise ValueError(f"{method} is not one of the defined constancy detection methods")
 
@@ -204,6 +204,7 @@ def check_for_jumps(df_data, window=2, threshold=1, value_col_name="value"):
         index=df_data.index
     )
     # In the beginning and the ending, window is outside and mean is nan -> treat as non-drifting
-    df_jump.iloc[range(window - 1)] = False
+    df_jump.loc[df_jump.index[range(window - 1)], 'Jump'] = False
+    df_jump.loc[df_jump.index[range(-1, -window, -1)], 'Jump'] = False
 
     return df_jump
