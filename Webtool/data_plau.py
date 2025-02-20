@@ -206,4 +206,4 @@ def check_for_jumps(df_data, window=2, threshold=1, value_col_name="value"):
     # In the beginning and the ending, window is outside and mean is nan -> treat as non-drifting
     df_jump.iloc[range(window - 1)] = False
 
-    return df_drift
+    return df_jump
