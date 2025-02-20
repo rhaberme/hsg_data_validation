@@ -39,18 +39,18 @@ def check_gaps(df_data, custom_missing_values=None):
     return df_gap
 
 # 2 Konstanz
-def check_constancy(df_data, window=2, max_delta=1e-8, min_std=0, value_col_name="value", method="delta"):
+def check_constancy(df_data, window=2, threshold=1e-8, min_std=0, value_col_name="value", method="threshold"):
     if value_col_name not in df_data.columns:
         raise ValueError(f"Column '{value_col_name}' not in dataframe")
 
-    if method == "delta": # If maximum difference is too low in the window
+    if method == "threshold": # If maximum difference is too low in the window
         # Compute rolling difference
         roll = df_data[value_col_name].rolling(window=window, center=True)
         delta = roll.max() - roll.min()
         # Check if it exceeds the minimum
         df_constant = pd.DataFrame(
             {
-                "Constancy": (delta < max_delta)
+                "Constancy": (delta < threshold)
             },
             index=df_data.index
         )
@@ -187,5 +187,21 @@ def check_drift(df_data, window=10, threshold=0.1, zero=0,  method="mean", value
     return df_drift
 
 
-def check_for_jumps(df_data):
-    pass
+def check_for_jumps(df_data, window=2, threshold=1, value_col_name="value"):
+    if value_col_name not in df_data.columns:
+        raise ValueError(f"Column '{value_col_name}' not in dataframe")
+
+    # Compute rolling mean left and right
+    rollmean_left = df_data[value_col_name].rolling(window=window, center=False, closed='left').mean()
+    rollmean_right = df_data[value_col_name].iloc[::-1].rolling(window=window, center=False, closed='left').mean().iloc[::-1]
+    # Check if it exceeds the minimum
+    df_jump = pd.DataFrame(
+        {
+            "Jump": (abs(rollmean_left - rollmean_right) > threshold)
+        },
+        index=df_data.index
+    )
+    # In the beginning and the ending, window is outside and mean is nan -> treat as non-drifting
+    df_jump.iloc[range(window - 1)] = False
+
+    return df_drift
