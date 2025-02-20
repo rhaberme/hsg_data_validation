@@ -26,17 +26,19 @@ def check_gaps(df_data, custom_missing_values=None):
         custom_missing_values = [custom_missing_values]
 
     missing_mask = df_data.isna() | df_data.isnull()
+
     for value in custom_missing_values:
         if isinstance(value, (str, int, float)):
-            missing_mask = missing_mask | (df_data == value)
-    df_gap = pd.DataFrame(
-        {
-            "Missing": missing_mask
-        },
-        index=df_data.index
-    )
+            missing_mask |= (df_data == value)
+
+    df_gap = pd.DataFrame({
+        "Missing": missing_mask.any(axis=1)
+    }, index=df_data.index)
+    print(df_gap)
 
     return df_gap
+
+
 
 # 2 Konstanz
 def check_constancy(df_data, window=2, threshold=1e-8, min_std=0, value_col_name="value", method="threshold"):
@@ -83,17 +85,17 @@ def check_range(df_data, lower_border=-np.inf, upper_border=np.inf, value_col_na
 
 
 # 4 Ausreißer
-def check_outlier(df_data, value_col_name="value", method="std_method", threshold_multiplier=3, iqr_multiplier=1.5):
+def check_outlier(df_data, value_col_name="value", method="std_method", std_multiplier=3, iqr_multiplier=1.5):
     if value_col_name not in df_data.columns:
         raise ValueError(f"Column '{value_col_name}' not in dataframe")
 
     if method == "std_method":
-        assert threshold_multiplier
+        assert std_multiplier
         mean_value = df_data[value_col_name].mean()
         std_dev = df_data[value_col_name].std()
 
-        upper_limit = mean_value + threshold_multiplier * std_dev
-        lower_limit = mean_value - threshold_multiplier * std_dev
+        upper_limit = mean_value + std_multiplier * std_dev
+        lower_limit = mean_value - std_multiplier * std_dev
 
         df_outliers = pd.DataFrame(
             {
