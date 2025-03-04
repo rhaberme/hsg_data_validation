@@ -150,8 +150,12 @@ def check_gradients(df_data, value_col_name="value", gradient_threshold=None):
 
 
 # 6 Rauschen
-def check_noise(df_data, value_col="value"):
-    return []
+def check_noise(df_data, window_size, threshold, value_col="value"):
+    
+    rolling_std = df_data.rolling(window=window_size, min_periods=1).std()
+    df_noise = df_data.where(rolling_std <= threshold, np.nan)
+    
+    return df_noise
 
 
 # 7 Drift
