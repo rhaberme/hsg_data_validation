@@ -20,6 +20,7 @@ import pandas as pd
 
 # 1 Lücke
 def check_gaps(df_data, custom_missing_values=None):
+    custom_missing_values = None if custom_missing_values == "" else custom_missing_values
     if custom_missing_values is None:
         custom_missing_values = []
     if not isinstance(custom_missing_values, list):
@@ -34,7 +35,6 @@ def check_gaps(df_data, custom_missing_values=None):
     df_gap = pd.DataFrame({
         "Missing": missing_mask.any(axis=1)
     }, index=df_data.index)
-    print(df_gap)
 
     return df_gap
 

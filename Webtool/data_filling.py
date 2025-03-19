@@ -15,9 +15,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import pandas as pd
-import TSCC
+# import TSCC
 
-
+"""
 def fill_nan_interp(df_data, value_col_name="value"):
     df_data["isError"] = df_data[value_col_name].isna()
     config = TSCC.preprocessing.Config(colname_raw = value_col_name)
@@ -43,4 +43,4 @@ def fill_nan_rollingmean(df_data, value_col_name="value"):
 
 def transform_to_higher_freq(df_data: pd.DataFrame, value_col_name: str = "value",
                              current_freq: int = 10, output_freq: int = 1):
-    pass
+    pass"""
