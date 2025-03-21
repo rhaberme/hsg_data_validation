@@ -27,7 +27,6 @@ class Measurement:
                  measurement_type: str,
                  label_value: Union[str, None],
                  label_date_time: Union[list, None],
-                 is_normalized: bool = False,
                  status_available: bool = False,
                  label_status: Union[str, None] = None,
                  accepted_status: Union[str, int, None] = None,
@@ -40,20 +39,17 @@ class Measurement:
                  hysteresis=None
                  ):
         self.filepath = filepath
-        if is_normalized:
-            self.raw_df = d_p.read_normalized_ftr(filepath, to_datetime=False, to_ns=False)
-            self.status_available = True if len(self.raw_df.columns) > 1 else False
-        else:
-            self.raw_df = d_p.create_df_data_from_csv(filepath, date_time_col_name_s=label_date_time,
-                                                      value_col_name=label_value,
-                                                      ambiguous=False,
-                                                      status_available=status_available,
-                                                      status_col_name=label_status,
-                                                      sep=sep
-                                                      )
-            if status_available:
-                self.raw_df = d_p.replace_status_informations_with_binary(self.raw_df, allowed_status=accepted_status)
-            self.status_available = status_available
+
+        self.raw_df = d_p.create_df_data_from_csv(filepath, date_time_col_name_s=label_date_time,
+                                                  value_col_name=label_value,
+                                                  ambiguous=False,
+                                                  status_available=status_available,
+                                                  status_col_name=label_status,
+                                                  sep=sep
+                                                  )
+        if status_available:
+            self.raw_df = d_p.replace_status_informations_with_binary(self.raw_df, allowed_status=accepted_status)
+        self.status_available = status_available
 
         if drop_duplicates:
             self.raw_df = d_p.drop_duplicated_indices(self.raw_df)
@@ -61,7 +57,6 @@ class Measurement:
         self.name = name
         self.measurement_type = measurement_type
         self.year = self.recognize_year()
-        self.is_normalized = is_normalized
         self.label_value = label_value
         self.label_date_time = label_date_time
         self.label_status = label_status
