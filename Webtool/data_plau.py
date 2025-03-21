@@ -33,7 +33,7 @@ def check_gaps(df_data, custom_missing_values=None):
             missing_mask |= (df_data == value)
 
     df_gap = pd.DataFrame({
-        "Missing": missing_mask.any(axis=1)
+        "Error": missing_mask.any(axis=1)
     }, index=df_data.index)
 
     return df_gap
@@ -52,24 +52,24 @@ def check_constancy(df_data, window=2, threshold=1e-8, min_std=0, value_col_name
         # Check if it exceeds the minimum
         df_constant = pd.DataFrame(
             {
-                "Constancy": (delta < threshold)
+                "Error": (delta < threshold)
             },
             index=df_data.index
         )
         # In the beginning, window is outside and delta is nan -> treat as non-constant
-        df_constant.loc[df_constant.index[range(window-1)], 'Constancy'] = False
+        df_constant.loc[df_constant.index[range(window-1)], 'Error'] = False
     elif method == "std": # If std is too low in the window
         # Compute rolling std
         std = df_data[value_col_name].rolling(window=window, center=True).std()
         # Check if it exceeds the minimum
         df_constant = pd.DataFrame(
             {
-                "Constancy": (std < min_std)
+                "Error": (std < min_std)
             },
             index=df_data.index
         )
         # In the beginning, window is outside and std is nan -> treat as non-constant
-        df_constant.loc[df_constant.index[range(window-1)], 'Constancy'] = False
+        df_constant.loc[df_constant.index[range(window-1)], 'Error'] = False
     else:
         raise ValueError(f"{method} is not one of the defined constancy detection methods")
 
@@ -80,8 +80,10 @@ def check_constancy(df_data, window=2, threshold=1e-8, min_std=0, value_col_name
 def check_range(df_data, lower_border=-np.inf, upper_border=np.inf, value_col_name="value"):
     df_check = pd.DataFrame(
         np.bitwise_or(df_data[value_col_name] < lower_border, df_data[value_col_name] > upper_border)
-        , index=df_data.index, columns=["Range Error"])
+        , index=df_data.index, columns=["value"])
+    df_check.rename(columns={"value": "Error"}, inplace=True)
     return df_check
+
 
 
 # 4 Ausreißer
@@ -92,14 +94,15 @@ def check_outlier(df_data, value_col_name="value", method="std_method", std_mult
     if method == "std_method":
         assert std_multiplier
         mean_value = df_data[value_col_name].mean()
+        print(mean_value)
         std_dev = df_data[value_col_name].std()
-
+        print(std_dev)
         upper_limit = mean_value + std_multiplier * std_dev
         lower_limit = mean_value - std_multiplier * std_dev
 
         df_outliers = pd.DataFrame(
             {
-                "Outlier": (df_data[value_col_name] > upper_limit) | (df_data[value_col_name] < lower_limit)
+                "Error": (df_data[value_col_name] > upper_limit) | (df_data[value_col_name] < lower_limit)
             },
             index=df_data.index
         )
@@ -114,7 +117,7 @@ def check_outlier(df_data, value_col_name="value", method="std_method", std_mult
 
         df_outliers = pd.DataFrame(
             {
-                "Outlier": (df_data[value_col_name] < lower_bound) | (df_data[value_col_name] > upper_bound)
+                "Error": (df_data[value_col_name] < lower_bound) | (df_data[value_col_name] > upper_bound)
             },
             index=df_data.index
         )
@@ -125,9 +128,6 @@ def check_outlier(df_data, value_col_name="value", method="std_method", std_mult
 
 
 # 5 Gradient
-def check_gradient(df_data, delta=1.5, value_col_name="value"):
-    pass
-
 def check_gradients(df_data, value_col_name="value", gradient_threshold=None):
     if value_col_name not in df_data.columns:
         raise ValueError(f"Column '{value_col_name}' not in dataframe")
@@ -138,23 +138,24 @@ def check_gradients(df_data, value_col_name="value", gradient_threshold=None):
     gradients = df_data[value_col_name].diff().abs()
     df_high_gradients = pd.DataFrame(
         {
-            "High_Gradient": gradients > gradient_threshold
+            "Error": gradients > gradient_threshold
         },
         index=df_data.index
     )
 
     # first row will have nan for gradient --> set it to False
-    df_high_gradients.loc[df_high_gradients.index[0], 'High_Gradient'] = False
+    df_high_gradients.loc[df_high_gradients.index[0], 'Error'] = False
 
     return df_high_gradients
 
 
 # 6 Rauschen
 def check_noise(df_data, window_size, threshold, value_col="value"):
-    
-    rolling_std = df_data.rolling(window=window_size, min_periods=1).std()
-    df_noise = df_data.where(rolling_std <= threshold, np.nan)
-    
+    rolling_std = df_data[value_col].rolling(window=window_size, min_periods=1).std()
+    noise_mask = (rolling_std > threshold)
+    df_noise = pd.DataFrame(noise_mask, index=df_data.index, columns=["value"])
+    df_noise.rename(columns={"value": "Error"}, inplace=True)
+
     return df_noise
 
 
@@ -169,24 +170,24 @@ def check_drift(df_data, window=10, threshold=0.1, zero=0,  method="mean", value
         # Check if it exceeds the minimum
         df_drift = pd.DataFrame(
             {
-                "Drift": (rollmean > threshold)
+                "Error": (rollmean > threshold)
             },
             index=df_data.index
         )
         # In the beginning, window is outside and mean is nan -> treat as non-drifting
-        df_drift.loc[df_drift.index[range(window-1)], 'Drift'] = False
+        df_drift.loc[df_drift.index[range(window-1)], 'Error'] = False
     elif method == "zero": # If std is too low in the window
         # Compute rolling average
         rollmean = df_data[value_col_name].rolling(window=window, center=True).mean()
         # Check if it exceeds the minimum
         df_drift = pd.DataFrame(
             {
-                "Drift": (abs(rollmean - zero) > threshold)
+                "Error": (abs(rollmean - zero) > threshold)
             },
             index=df_data.index
         )
         # In the beginning, window is outside and mean is nan -> treat as non-drifting
-        df_drift.loc[df_drift.index[range(window-1)], 'Drift'] = False
+        df_drift.loc[df_drift.index[range(window-1)], 'Error'] = False
     else:
         raise ValueError(f"{method} is not one of the defined constancy detection methods")
 
@@ -203,12 +204,12 @@ def check_for_jumps(df_data, window=2, threshold=1, value_col_name="value"):
     # Check if it exceeds the minimum
     df_jump = pd.DataFrame(
         {
-            "Jump": (abs(rollmean_left - rollmean_right) > threshold)
+            "Error": (abs(rollmean_left - rollmean_right) > threshold)
         },
         index=df_data.index
     )
     # In the beginning and the ending, window is outside and mean is nan -> treat as non-drifting
-    df_jump.loc[df_jump.index[range(window - 1)], 'Jump'] = False
-    df_jump.loc[df_jump.index[range(-1, -window, -1)], 'Jump'] = False
+    df_jump.loc[df_jump.index[range(window - 1)], 'Error'] = False
+    df_jump.loc[df_jump.index[range(-1, -window, -1)], 'Error'] = False
 
     return df_jump
