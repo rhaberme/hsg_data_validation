@@ -272,6 +272,8 @@ if do_plausibility_checks:
         else:
             df_filled = df_raw.copy()
 
+        df_filled = d_p.df_to_datetime(df_filled)
+
         df_validated = df_raw.copy()
         st.session_state["changed_df"] = df_validated
 
@@ -284,7 +286,7 @@ if do_plausibility_checks:
         df_nan = d_p.drop_duplicated_indices(df_nan)
 
         tab1.write("Timeseries after validation:")
-        changed_df_with_deleted_and_new = df_raw.copy()
+        changed_df_with_deleted_and_new = df_filled.copy()
         if "status" in changed_df_with_deleted_and_new:
             changed_df_with_deleted_and_new.drop(["status"], axis=1, inplace=True)
 
@@ -299,6 +301,7 @@ if do_plausibility_checks:
         tab1.success(f'Die validierten Daten wurden zur Messreihe '
                      f'{chosen_measurement.name} hinzugefügt.')
 
+        # Todo: Legende
         pd.options.plotting.backend = "plotly"
         fig = changed_df_with_deleted_and_new.plot(title="", template="simple_white")
         fig.update_layout(showlegend=False, xaxis_title="", yaxis_title="Messung",
@@ -306,12 +309,6 @@ if do_plausibility_checks:
 
         tab1.plotly_chart(fig, use_container_width=True)
 
-
-        fig2 = df_filled.plot(title="", template="simple_white")
-        fig2.update_layout(showlegend=False, xaxis_title="", yaxis_title="Messung",
-                          plot_bgcolor="white", margin=dict(t=40, r=1, l=1))
-
-        tab1.plotly_chart(fig2, use_container_width=True)
 
 tab2.markdown('<p class="small-font-red">Händische Datenprüfung ist noch in der Entwicklung!</p>',
               unsafe_allow_html=True)
