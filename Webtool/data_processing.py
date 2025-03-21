@@ -64,15 +64,14 @@ def create_df_data_from_csv(filepath: str,
 
     df_data = df_data.rename(columns={dt_col_name: "unixtime"})
     df_data = df_data.set_index("unixtime")
-    try:
-        df_data = df_data.tz_localize('Europe/Berlin', ambiguous=ambiguous, nonexistent='shift_forward').tz_convert('UTC')
-    except TypeError:
-        pass
+    df_data = df_data.tz_localize('Europe/Berlin', ambiguous=ambiguous, nonexistent='shift_forward').tz_convert('UTC')
+
 
     def date_to_unix(date):
         return (date - pd.Timestamp("1970-01-01", tz="UTC")) // pd.Timedelta('1s')
 
     df_data.index = pd.Series(df_data.index).apply(date_to_unix)
+
 
     if not status_available:
         df_data = df_data[[value_col_name]]
@@ -144,15 +143,11 @@ def read_normalized_ftr(filepath: str, to_datetime=False, to_ns=False):
     return df
 
 
-def drop_implausible_measurements(df_data, implausible_dates, value_col_name="value"):
-    df_data_copy = df_data.copy()
-    for date in implausible_dates:
-        try:
-            df_data_copy.loc[df_data_copy.index == date, value_col_name] = np.nan
-        except IndexError:
-            print("Reihe nicht gefunden")
-            pass
-    return df_data_copy
+def drop_implausible_measurements(df_values, df_inplausible, inplausible_column_name):
+    merged_df = df_values.merge(df_inplausible, left_index=True, right_index=True, how='left')
+    merged_df.loc[merged_df[inplausible_column_name], 'value'] = np.nan
+    merged_df.drop(columns=[inplausible_column_name], inplace=True)
+    return merged_df
 
 
 def drop_duplicated_indices(df_data):
