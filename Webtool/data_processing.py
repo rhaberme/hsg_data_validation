@@ -144,10 +144,9 @@ def read_normalized_ftr(filepath: str, to_datetime=False, to_ns=False):
 
 
 def drop_implausible_measurements(df_values, df_inplausible, inplausible_column_name):
-    merged_df = df_values.merge(df_inplausible, left_index=True, right_index=True, how='left')
-    merged_df.loc[merged_df[inplausible_column_name], 'value'] = np.nan
-    merged_df.drop(columns=[inplausible_column_name], inplace=True)
-    return merged_df
+    df_dropped = df_values.copy()
+    df_dropped.loc[df_inplausible[inplausible_column_name], 'value'] = np.nan
+    return df_dropped
 
 
 def drop_duplicated_indices(df_data):

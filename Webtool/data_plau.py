@@ -17,7 +17,7 @@
 import numpy as np
 import pandas as pd
 
-
+# TODO: Grosse Zeitschritte/unregelmässige -> Als lücke erkennen
 # 1 Lücke
 def check_gaps(df_data, custom_missing_values=None):
     custom_missing_values = None if custom_missing_values == "" else custom_missing_values
@@ -170,7 +170,7 @@ def check_drift(df_data, window=10, threshold=0.1, zero=0,  method="mean", value
         # Check if it exceeds the minimum
         df_drift = pd.DataFrame(
             {
-                "Error": (rollmean > threshold)
+                "Error": (abs(rollmean) > threshold)
             },
             index=df_data.index
         )
