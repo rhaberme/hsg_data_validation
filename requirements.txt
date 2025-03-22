@@ -1,19 +1,14 @@
 # TODO resolve environment specs
 
-pandas~=2.1.0
-wetterdienst==0.94.0
+pandas
 streamlit~=1.37.1
-numpy~=1.26.4
-measurement~=3.2.2
+numpy
+measurement
 certifi~=2024.7.4
 scipy~=1.12
-pyarrow~=17.0.0
+pyarrow
 pytz~=2024.1
 matplotlib~=3.8
 seaborn~=0.13.2
 plotly~=5.23.0
-plotly-resampler~=0.6
-
-# TSCC package with a specific index URL
---index-url https://pypi.org/simple/
-TSCC==0.0.7
+plotly-resampler
