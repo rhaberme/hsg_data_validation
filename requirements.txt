@@ -15,5 +15,5 @@ plotly~=5.23.0
 plotly-resampler~=0.6
 
 # TSCC package with a specific index URL
---index-url https://pypi.org/simple/
-TSCC==0.0.7
+# --index-url https://pypi.org/simple/
+# TSCC==0.0.7

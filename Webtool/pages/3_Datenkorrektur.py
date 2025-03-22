@@ -7,6 +7,7 @@ import data_plau as dplau
 import data_processing as d_p
 import data_filling as d_f
 
+# Todo: add anomalie classes
 
 data_filling_fun_dict = {"Null": d_f.fill_nan_null,
                          "Interpolation": d_f.fill_nan_interp,
@@ -194,6 +195,17 @@ if check_drift:
             st.session_state['drift_zero'] = st.number_input("Zero", min_value=-1000.0, max_value=1000.0, value=0.0,
                                                              step=0.1)
 
+check_jump = col1.checkbox('Jump', disabled=False,
+                            help="")
+if check_jump:
+    exp_ = col2.expander("Settings 'Jump'")
+    with exp_:
+        st.session_state['jump_window'] = st.number_input("Window for jump detection", min_value=1,
+                                                                             max_value=1000, value=10, step=1 )
+        threshold = st.session_state['jump_threshold'] =  st.number_input("Threshold for jump detection", min_value=0.0,
+                                                                             max_value=100000.0, value=2.0, step=1.0)
+
+
 col1.write("Plausibility Tests:")
 fill_gaps = col1.checkbox('Datenlücken füllen?')
 if fill_gaps:
@@ -264,6 +276,13 @@ if do_plausibility_checks:
             tab1.markdown(f"plausibility test drift: {df_inplausible["Error"].sum()} inplausible data found.")
             df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
+        if check_jump:
+            df_inplausible = dplau.check_jumps(df_data=df_raw,
+                                               window=st.session_state['jump_window'],
+                                               threshold=st.session_state['jump_threshold'],
+                                               value_col_name="value")
+            tab1.markdown(f"plausibility test jump: {df_inplausible["Error"].sum()} inplausible data found.")
+            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
         if "selected_fill_method" in st.session_state.keys() and st.session_state[
             "selected_fill_method"] != "Regression":

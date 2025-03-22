@@ -1,6 +1,0 @@
-test,physical_range,physical_range,measuring_range,measuring_range,calibration_range,calibration_range,expertise_range,expertise_range,gradient_range,gradient_range,dynamic_consistency,multivariate_range,multivariate_range,multivariate_range,timestamp_consistency,timestamp_consistency,index_dupplicated,missing_test
-parameter,lower_limit,upper_limit,lower_limit,upper_limit,lower_limit,upper_limit,lower_limit,upper_limit,lower_limit,upper_limit,other,lower_limit,upper_limit,other,other_lower_limit,other_upper_limit,time_step,tolerance,keep,use_test
-app1_conc [mg/l],0,1000000,,6000,,,0,2500,-2000,2000,,app1_h [m],0.15,,,,,True
-app1_h [m],0,,0.0005,5,,,,,,,,,,,,,,
-Date&Time,,,,,,,,,,,,,,,30s,0s,False,False
-app1_t_water [C],0,100,-20,60,,,10,25,-1,1,,,,,,,,

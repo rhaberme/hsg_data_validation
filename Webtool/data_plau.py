@@ -194,7 +194,7 @@ def check_drift(df_data, window=10, threshold=0.1, zero=0,  method="mean", value
     return df_drift
 
 
-def check_for_jumps(df_data, window=2, threshold=1, value_col_name="value"):
+def check_jumps(df_data, window=2, threshold=1, value_col_name="value"):
     if value_col_name not in df_data.columns:
         raise ValueError(f"Column '{value_col_name}' not in dataframe")
 
