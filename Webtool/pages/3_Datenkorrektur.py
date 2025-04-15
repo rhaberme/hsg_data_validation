@@ -6,6 +6,7 @@ from plotly_resampler import register_plotly_resampler, unregister_plotly_resamp
 import data_plau as dplau
 import data_processing as d_p
 import data_filling as d_f
+from Measurement import Measurement
 
 # Todo: add anomalie classes
 
@@ -214,6 +215,8 @@ if fill_gaps:
                                                                                       "Gleitendes Mittel"],
                                           key="selected_fill_method")
 do_plausibility_checks = col1.button("Started plausibility tests")
+
+
 if do_plausibility_checks:
     with (st.spinner("Datenprüfung wird ausgeführt")):
         df_raw = chosen_measurement.raw_df.copy()
@@ -329,5 +332,23 @@ if do_plausibility_checks:
         tab1.plotly_chart(fig, use_container_width=True)
 
 
+        @st.cache_data
+        def convert_for_download(df):
+            return df.to_csv(na_rep="nan").encode("utf-8")
+
+        csv = convert_for_download(chosen_measurement.validated_df)
+
+        st.download_button(
+            label="Download validated timeseries",
+            data=csv,
+            file_name="validated_timeseries.csv",
+            mime="text/csv",
+            icon=":material/download:",
+        )
+
+
+
 tab2.markdown('<p class="small-font-red">Händische Datenprüfung ist noch in der Entwicklung!</p>',
               unsafe_allow_html=True)
+
+
