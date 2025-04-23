@@ -1,12 +1,14 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
 from plotly_resampler import register_plotly_resampler, unregister_plotly_resampler
 
 import data_plau as dplau
 import data_processing as d_p
 import data_filling as d_f
 from Measurement import Measurement
+from sympy.codegen.cfunctions import isnan
 
 # Todo: add anomalie classes
 
@@ -19,8 +21,8 @@ data_filling_fun_dict = {"Null": d_f.fill_nan_null,
 register_plotly_resampler(mode="auto", default_n_shown_samples=50000)
 
 st.set_page_config(
-    page_title="CSO Data-Tool",
-    page_icon="🌊",
+    page_title="HSG Sim Datentool",
+    page_icon="HSG",
     layout="centered"
 )
 
@@ -158,7 +160,7 @@ if check_gradient:
     exp_ = col2.expander("Settings 'Gradient'")
     with exp_:
 
-        st.session_state['gradient_check_delta'] = st.number_input("Max. Delta per Minute",
+        st.session_state['gradient_check_delta'] = st.number_input("Max. Delta per Timestep",
                                                                    min_value=0.00,
                                                                    max_value=10.00, value=1.50, step=0.01)
 
@@ -196,6 +198,7 @@ if check_drift:
             st.session_state['drift_zero'] = st.number_input("Zero", min_value=-1000.0, max_value=1000.0, value=0.0,
                                                              step=0.1)
 
+
 check_jump = col1.checkbox('Jump', disabled=False,
                             help="")
 if check_jump:
@@ -220,11 +223,30 @@ do_plausibility_checks = col1.button("Started plausibility tests")
 if do_plausibility_checks:
     with (st.spinner("Datenprüfung wird ausgeführt")):
         df_raw = chosen_measurement.raw_df.copy()
+        df_valid = chosen_measurement.raw_df.copy()
+        df_valid["ABC"] = False # Range
+        df_valid["DK"] = False # Gap
+        df_valid["E"] = False # Konstanz
+        df_valid["F"] = False # Ausreisser
+        df_valid["G"] = False # Gradient
+        df_valid["H"] = False # Rauschen
+        df_valid["I"] = False # Drift
+        df_valid["J"] = False # Shift
+
         if check_gap:
             df_inplausible = dplau.check_gaps(df_raw,
                                               custom_missing_values=st.session_state["gap_custom_missing_values"])
             tab1.markdown(f"Plausibility test gap: {df_inplausible["Error"].sum()} inplausible data found.")
-            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
+            df_valid.loc[df_inplausible["Error"], "DK"] = True
+        #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
+
+        if check_range:
+            df_inplausible = dplau.check_range(df_data=df_raw,
+                                               upper_border=st.session_state['range_check_upper_border'],
+                                               lower_border=st.session_state['range_check_lower_border'])
+            tab1.markdown(f"plausibility test range: {df_inplausible["Error"].sum()} inplausible data found.")
+            df_valid.loc[df_inplausible["Error"], "ABC"] = True
+        #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
         if check_constancy:
             df_inplausible = dplau.check_constancy(df_raw,
@@ -234,15 +256,8 @@ if do_plausibility_checks:
                                                    value_col_name="value",
                                                    method=st.session_state["constancy_method"])
             tab1.markdown(f"Plausibility test constancy: {df_inplausible["Error"].sum()} inplausible data found.")
-            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
-
-        if check_range:
-            df_inplausible = dplau.check_range(df_data=df_raw,
-                                               upper_border=st.session_state['range_check_upper_border'],
-                                               lower_border=st.session_state['range_check_lower_border'])
-            tab1.markdown(f"plausibility test range: {df_inplausible["Error"].sum()} inplausible data found.")
-
-            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
+            df_valid.loc[df_inplausible["Error"], "E"] = True
+        #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
         if check_outlier:
             df_inplausible = dplau.check_outlier(df_data=df_raw,
@@ -252,14 +267,16 @@ if do_plausibility_checks:
                                                  iqr_multiplier=st.session_state['outlier_iqr_multiplier'])
 
             tab1.markdown(f"plausibility test outlier: {df_inplausible["Error"].sum()} inplausible data found.")
-            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
+            df_valid.loc[df_inplausible["Error"], "F"] = True
+        #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
         if check_gradient:
             df_inplausible = dplau.check_gradients(df_data=df_raw,
                                                    value_col_name="value",
                                                    gradient_threshold=st.session_state['gradient_check_delta'])
             tab1.markdown(f"plausibility test gradient: {df_inplausible["Error"].sum()} inplausible data found.")
-            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
+            df_valid.loc[df_inplausible["Error"], "G"] = True
+        #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
         if check_noise:
             df_inplausible = dplau.check_noise(df_data=df_raw,
@@ -267,7 +284,8 @@ if do_plausibility_checks:
                                                threshold=st.session_state['noise_treshold'],
                                                value_col="value")
             tab1.markdown(f"plausibility test noise: {df_inplausible["Error"].sum()} inplausible data found.")
-            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
+            df_valid.loc[df_inplausible["Error"], "H"] = True
+        #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
         if check_drift:
             df_inplausible = dplau.check_drift(df_data=df_raw,
@@ -277,17 +295,28 @@ if do_plausibility_checks:
                                                method=st.session_state['drift_method'],
                                                value_col_name="value")
             tab1.markdown(f"plausibility test drift: {df_inplausible["Error"].sum()} inplausible data found.")
-            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
+            df_valid.loc[df_inplausible["Error"], "I"] = True
+        #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
         if check_jump:
             df_inplausible = dplau.check_jumps(df_data=df_raw,
                                                window=st.session_state['jump_window'],
                                                threshold=st.session_state['jump_threshold'],
                                                value_col_name="value")
-            tab1.markdown(f"plausibility test jump: {df_inplausible["Error"].sum()} inplausible data found.")
-            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
+            tab1.markdown(f"plausibility test jumps: {df_inplausible["Error"].sum()} inplausible data found.")
+            df_valid.loc[df_inplausible["Error"], "J"] = True
+        #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
-        if "selected_fill_method" in st.session_state.keys() and st.session_state[
+        df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="ABC")
+        df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="DK")
+        df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="E")
+        df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="F")
+        df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="G")
+        df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="H")
+        df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="I")
+        df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="J")
+
+        if fill_gaps and "selected_fill_method" in st.session_state.keys() and st.session_state[
             "selected_fill_method"] != "Regression":
             df_filled = data_filling_fun_dict[selected_fill_method](
                 df_raw) if selected_fill_method else df_raw
@@ -296,16 +325,40 @@ if do_plausibility_checks:
 
         df_filled = d_p.df_to_datetime(df_filled)
 
-        df_validated = df_raw.copy()
+        df_validated = df_filled.copy()
         st.session_state["changed_df"] = df_validated
 
-        df_nan = df_raw.copy()
-        df_nan["value"] = np.nan
         indices_of_nan = pd.isnull(df_raw).any(axis=1).to_numpy().nonzero()[0]
 
-        df_nan.iloc[indices_of_nan] = chosen_measurement.raw_df.iloc[indices_of_nan]
-        df_nan = d_p.df_to_datetime(df_nan)
-        df_nan = d_p.drop_duplicated_indices(df_nan)
+        indices_of_ABC = indices_of_nan[df_valid["ABC"].iloc[indices_of_nan]]
+        indices_of_DK = indices_of_nan[df_valid["DK"].iloc[indices_of_nan]]
+        indices_of_E = indices_of_nan[df_valid["E"].iloc[indices_of_nan]]
+        indices_of_F = indices_of_nan[df_valid["F"].iloc[indices_of_nan]]
+        indices_of_G = indices_of_nan[df_valid["G"].iloc[indices_of_nan]]
+        indices_of_H = indices_of_nan[df_valid["H"].iloc[indices_of_nan]]
+        indices_of_I = indices_of_nan[df_valid["I"].iloc[indices_of_nan]]
+        indices_of_J = indices_of_nan[df_valid["J"].iloc[indices_of_nan]]
+
+
+        df_ABC = df_raw.copy()
+        df_ABC["value"] = np.nan
+        df_ABC = d_p.df_to_datetime(df_ABC)
+        df_ABC = d_p.drop_duplicated_indices(df_ABC)
+        df_DK = df_ABC.copy()
+        df_E = df_ABC.copy()
+        df_F = df_ABC.copy()
+        df_G = df_ABC.copy()
+        df_H = df_ABC.copy()
+        df_I = df_ABC.copy()
+        df_J = df_ABC.copy()
+        df_ABC.iloc[indices_of_ABC] = chosen_measurement.raw_df.iloc[indices_of_ABC]
+        df_DK.iloc[indices_of_DK] = chosen_measurement.raw_df.iloc[indices_of_DK]
+        df_E.iloc[indices_of_E] = chosen_measurement.raw_df.iloc[indices_of_E]
+        df_F.iloc[indices_of_F] = chosen_measurement.raw_df.iloc[indices_of_F]
+        df_G.iloc[indices_of_G] = chosen_measurement.raw_df.iloc[indices_of_G]
+        df_H.iloc[indices_of_H] = chosen_measurement.raw_df.iloc[indices_of_H]
+        df_I.iloc[indices_of_I] = chosen_measurement.raw_df.iloc[indices_of_I]
+        df_J.iloc[indices_of_J] = chosen_measurement.raw_df.iloc[indices_of_J]
 
         tab1.write("Timeseries after validation:")
         changed_df_with_deleted_and_new = df_filled.copy()
@@ -313,7 +366,22 @@ if do_plausibility_checks:
             changed_df_with_deleted_and_new.drop(["status"], axis=1, inplace=True)
 
         changed_df_with_deleted_and_new = d_p.df_to_datetime(changed_df_with_deleted_and_new)
-        changed_df_with_deleted_and_new["Deleted Data"] = df_nan.copy().value
+        if check_range:
+            changed_df_with_deleted_and_new["ABC"] = df_ABC.value
+        if check_gap:
+            changed_df_with_deleted_and_new["DK"] = df_DK.value
+        if check_constancy:
+            changed_df_with_deleted_and_new["E"] = df_E.value
+        if check_outlier:
+            changed_df_with_deleted_and_new["F"] = df_F.value
+        if check_gradient:
+            changed_df_with_deleted_and_new["G"] = df_G.value
+        if check_noise:
+            changed_df_with_deleted_and_new["H"] = df_H.value
+        if check_drift:
+            changed_df_with_deleted_and_new["I"] = df_I.value
+        if check_jump:
+            changed_df_with_deleted_and_new["J"] = df_J.value
         chosen_measurement.changed_df_with_deleted_and_new = changed_df_with_deleted_and_new
         if hasattr(chosen_measurement, "days_changed_dict"):
             del chosen_measurement.__dict__["days_changed_dict"]
@@ -323,10 +391,40 @@ if do_plausibility_checks:
         tab1.success(f'Die validierten Daten wurden zur Messreihe '
                      f'{chosen_measurement.name} hinzugefügt.')
 
-        # Todo: Legende
+        # http://hclwizard.org:3000/hclwizard/
+        # can be updated if there are better ideas
+        anomaly_print_dict = {
+            "ABC" : {"name": "Range (ABC)", "color": "#DB9D85"},
+#            "B": "#E093C3",
+#            "C": "#ACA4E2",
+            "DK" : {"name": "Gap (DK)", "color": "#4CB9CC"},
+#            "K": "#4CB9CC"
+            "E" : {"name": "Constancy (E)", "color": "#5CBD92"},
+            "F" : {"name": "Outliers (F)", "color": "#ABB065"},
+            "G" : {"name": "Gradient (G)", "color": "#DB9D85"},
+            "H" : {"name": "Noise (H)", "color": "#89D9CF"},
+            "I" : {"name": "Drift (I)", "color": "#AC7F21"},
+            "J" : {"name": "Jump (J)", "color": "#533600"},
+        }
+
         pd.options.plotting.backend = "plotly"
-        fig = changed_df_with_deleted_and_new.plot(title="", template="simple_white")
-        fig.update_layout(showlegend=False, xaxis_title="", yaxis_title="Messung",
+        fig = go.Figure()
+        fig = fig.add_trace(go.Scatter(
+            x = changed_df_with_deleted_and_new.index,
+            y=changed_df_with_deleted_and_new['value'],
+            name=f"Validated Timeseries {chosen_measurement.name}"
+        ))
+        for name, values in changed_df_with_deleted_and_new.items():
+            if name == "value":
+                continue
+            fig = fig.add_trace(go.Scatter(
+                x=values.index,
+                y=values,
+                name=anomaly_print_dict[name]['name'],
+                mode="markers",
+                marker=dict(color=anomaly_print_dict[name]['color'],),
+            ))
+        fig.update_layout(showlegend=True, xaxis_title="", yaxis_title="Messung",
                           plot_bgcolor="white", margin=dict(t=40, r=1, l=1))
 
         tab1.plotly_chart(fig, use_container_width=True)
@@ -336,7 +434,14 @@ if do_plausibility_checks:
         def convert_for_download(df):
             return df.to_csv(na_rep="nan").encode("utf-8")
 
-        csv = convert_for_download(chosen_measurement.validated_df)
+        # Assemble df for download
+        df_download = chosen_measurement.validated_df.copy()
+        for name, values in changed_df_with_deleted_and_new.items():
+            if name == "value":
+                continue
+            df_download[anomaly_print_dict[name]['name']] = values.map(lambda x: not pd.isna(x))
+
+        csv = convert_for_download(df_download)
 
         st.download_button(
             label="Download validated timeseries",
@@ -345,7 +450,6 @@ if do_plausibility_checks:
             mime="text/csv",
             icon=":material/download:",
         )
-
 
 
 tab2.markdown('<p class="small-font-red">Händische Datenprüfung ist noch in der Entwicklung!</p>',

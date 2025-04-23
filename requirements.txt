@@ -1,7 +1,7 @@
 # TODO resolve environment specs
 
 pandas
-streamlit~=1.37.1
+streamlit~=1.44.1
 numpy
 measurement
 certifi~=2024.7.4

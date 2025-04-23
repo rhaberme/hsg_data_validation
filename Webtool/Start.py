@@ -17,8 +17,8 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="CSO Data-Tool",
-    page_icon="🌊",
+    page_title="HSG Sim Datentool",
+    page_icon="HSG",
     layout="centered"
     # initial_sidebar_state="collapsed",
 )
