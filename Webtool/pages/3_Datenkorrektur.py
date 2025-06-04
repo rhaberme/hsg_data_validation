@@ -154,7 +154,7 @@ if check_outlier:
             st.session_state['outlier_std_multiplier'] = None
 
 check_gradient = col1.checkbox('Gradient', disabled=False,
-                               help="")
+                               help="https://gitlab.com/rhaberme/hsg_data_validation/-/wikis/check_gradient")
 
 if check_gradient:
     exp_ = col2.expander("Settings 'Gradient'")
