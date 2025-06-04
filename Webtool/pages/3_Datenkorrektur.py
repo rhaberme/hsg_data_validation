@@ -91,7 +91,7 @@ col1, col2 = tab1.columns(2)
 
 col1.write("Choose plausibility tests:")
 check_gap = col1.checkbox('Gap', disabled=False,
-                          help="")
+                          help="https://gitlab.com/rhaberme/hsg_data_validation/-/wikis/gaps")
 if check_gap:
     exp_ = col2.expander("Settings 'Gap'")
     with exp_:
@@ -99,7 +99,7 @@ if check_gap:
 
 
 check_constancy = col1.checkbox('Constancy', disabled=False,
-                                    help=(""))
+                                    help=("https://gitlab.com/rhaberme/hsg_data_validation/-/wikis/check_constancy"))
 
 if check_constancy:
     exp_ = col2.expander("Settings 'Constancy'")
@@ -124,7 +124,7 @@ if check_constancy:
                                                          max_value=100000.0, value=2.0)
 
 check_range = col1.checkbox('Range',
-                            help="")
+                            help="https://gitlab.com/rhaberme/hsg_data_validation/-/wikis/check_range")
 if check_range:
     exp_ = col2.expander("Settings 'Range'")
     with exp_:
@@ -133,7 +133,7 @@ if check_range:
         st.session_state['range_check_upper_border'] = st.number_input("Upper Border", value=5.0)
 
 
-check_outlier = col1.checkbox('Outlier', disabled=False, help="")
+check_outlier = col1.checkbox('Outlier', disabled=False, help="https://gitlab.com/rhaberme/hsg_data_validation/-/wikis/check_outlier")
 
 if check_outlier:
     exp_ = col2.expander("Settings 'Outlier'")
@@ -165,7 +165,7 @@ if check_gradient:
                                                                    max_value=10.00, value=1.50, step=0.01)
 
 check_noise = col1.checkbox('Noise', disabled=False,
-                            help="")
+                            help="https://gitlab.com/rhaberme/hsg_data_validation/-/wikis/check_noise")
 if check_noise:
     exp_ = col2.expander("Settings 'Noise'")
     with exp_:
@@ -177,7 +177,7 @@ if check_noise:
                                                                 max_value=1000.0, value=10.0, step=0.1)
 
 check_drift = col1.checkbox('Drift', disabled=False,
-                            help="")
+                            help="https://gitlab.com/rhaberme/hsg_data_validation/-/wikis/check_drift")
 if check_drift:
     exp_ = col2.expander("Settings 'Drift'")
     with exp_:
@@ -200,7 +200,7 @@ if check_drift:
 
 
 check_jump = col1.checkbox('Jump', disabled=False,
-                            help="")
+                            help="https://gitlab.com/rhaberme/hsg_data_validation/-/wikis/check_jumps")
 if check_jump:
     exp_ = col2.expander("Settings 'Jump'")
     with exp_:
