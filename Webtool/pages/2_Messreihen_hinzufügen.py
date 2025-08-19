@@ -41,8 +41,7 @@ st.markdown("""
 
 
 st.write("""
-# Messstelle hinzufügen
-## MW-Entlastungsanlage
+# add data
 """)
 
 col1, col2 = st.columns(2)
@@ -53,25 +52,25 @@ lon = None
 
 
 st.write("""
-## Messreihe hinzufügen
+## add time series
 """)
 
 
 
-measurment_number = st.text_input("Messstellen-Nr.")
-name = st.text_input("Name der Messreihe")
+measurment_number = st.text_input("Measuring point ID:")
+name = st.text_input("Time series name:")
 
-from_file_exp = st.expander("Messreihe von Datei laden", expanded=True)
+from_file_exp = st.expander("Load measurement series from file", expanded=True)
 
 
 
-status_available = from_file_exp.checkbox("Status verfügbar?")
-datetime_in_two_col = from_file_exp.checkbox("Datum und Zeit in zwei Spalten aufgeteilt?",
+status_available = from_file_exp.checkbox("Status available?")
+datetime_in_two_col = from_file_exp.checkbox("Date and time provided in seperate columns?",
                                              value=True)
 
 
 # with st.form(key='add_measurement_form'):
-st.session_state["measurement_uploader"] = from_file_exp.file_uploader('Messreihe hochladen', type=['ftr', 'csv', 'txt'])
+st.session_state["measurement_uploader"] = from_file_exp.file_uploader('Load file', type=['ftr', 'csv', 'txt'])
 if "column_names" not in st.session_state.keys():
     st.session_state["column_names"] = []
 
@@ -99,36 +98,36 @@ if st.session_state["measurement_uploader"]:
     st.session_state["column_names"] = column_names
 
 
-label_value = from_file_exp.selectbox("Label der Messwert-Spalte", st.session_state["column_names"],
+label_value = from_file_exp.selectbox("Name of the measurment-column", st.session_state["column_names"],
                                       index=st.session_state["column_names"].get_loc("value")
                                       if "value" in st.session_state["column_names"] else 0)
 
 if datetime_in_two_col:
-    label_date = from_file_exp.selectbox("Label der Datum-Spalte", st.session_state["column_names"],
+    label_date = from_file_exp.selectbox("Name of the date-column", st.session_state["column_names"],
                                          index=st.session_state["column_names"].get_loc("date")
                                          if "date" in st.session_state["column_names"] else 0
                                          )
-    label_time = from_file_exp.selectbox("Label der Zeit-Spalte", st.session_state["column_names"],
+    label_time = from_file_exp.selectbox("Name of the time-column", st.session_state["column_names"],
                                          index=st.session_state["column_names"].get_loc("time")
                                          if "time" in st.session_state["column_names"] else 0
                                          )
     label_date_time = [label_date, label_time]
 else:
-    label_date_time_string = from_file_exp.selectbox("Label der Datum-Spalte", st.session_state["column_names"])
+    label_date_time_string = from_file_exp.selectbox("Name of the timedate-column", st.session_state["column_names"])
     label_date_time = [label_date_time_string]
 
 if status_available:
-    label_status = from_file_exp.selectbox("Label der Status-Spalte", st.session_state["column_names"])
-    accepted_status = from_file_exp.text_input("Akzeptierter Status")
+    label_status = from_file_exp.selectbox("Name of the status-column", st.session_state["column_names"])
+    accepted_status = from_file_exp.text_input("Accepted status")
 else:
     label_status = None
     accepted_status = None
 
 if "measurment_dict" not in st.session_state:
     st.session_state["measurement_dict"] = {}
-measurement_submit_button = from_file_exp.button(label='Hinzufügen')
+measurement_submit_button = from_file_exp.button(label='Add data')
 if measurement_submit_button:
-    with st.spinner('Messreihe wird hinzugefügt...'):
+    with st.spinner('Time series is added...'):
 
         measurement_instance = Measurement(filepath=filepath, name=name,
                                            measurement_type=None, label_value=label_value,
@@ -136,4 +135,4 @@ if measurement_submit_button:
                                            label_status=label_status, accepted_status=accepted_status, sep=sep,
                                            drop_duplicates=True)
         st.session_state["measurement_dict"][measurement_instance.name] = measurement_instance
-    st.success(f'Die Messreihe {name} wurde erfolgreich hinzugefügt.')
+    st.success(f'The time series {name} has been successfully added.')
