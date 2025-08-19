@@ -54,14 +54,25 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Main area content
+st.title("Plausibility Tests")
+st.write("Here you can check the time series for plausibility.")
 
+st.markdown("""
+### What are Plausibility Tests?
+Plausibility tests help you verify the accuracy and consistency of your time series data. 
+They ensure that the data meets certain criteria and is suitable for analysis.
 
+### Steps to Perform a Plausibility Test:
+1. **Upload your time series data** using the upload feature.
+2. **Select the uploaded data** from the dropdown list.
+3. **Choose the plausibility tests** you want to perform.
+4. **Adjust the parameters** to fit your data.
+5. **Click on the 'Start Plausibility Tests' button** to perform the plausibility tests.
 
-st.write("""
-# Plausibility Tests
-"""
-         )
-st.sidebar.markdown("Checking the time series for plausibility")
+It's an iterative process to choose the best parameters for the test. 
+Try to start with small datasets and with the simpler tests.
+""")
 
 col5, col6 = st.columns(2)
 
@@ -69,7 +80,7 @@ try:
     if "measurement_dict" in st.session_state:
         chosen_measurement_name = col5.selectbox("Choose time series", st.session_state["measurement_dict"])
         chosen_measurement = st.session_state["measurement_dict"][chosen_measurement_name]
-        show_measurement = st.checkbox("Show time series?", ["", " "])
+        show_measurement = st.checkbox("Show time series?")
     else:
         st.session_state["measurement_dict"] = {}
         chosen_measurement = None
@@ -77,7 +88,7 @@ try:
 except KeyError:
     st.error("No time series selected")
 
-if chosen_measurement and show_measurement == " ":
+if chosen_measurement and show_measurement:
     pd.options.plotting.backend = "plotly"
     fig = chosen_measurement.return_df_as_datetime(raw=True)["value"].plot(title="", template="simple_white")
 
@@ -217,7 +228,7 @@ if fill_gaps:
                                                                                       "Null", "Average",
                                                                                       "Moving average"],
                                           key="selected_fill_method")
-do_plausibility_checks = col1.button("Started plausibility tests")
+do_plausibility_checks = col1.button("Start plausibility tests")
 
 
 if do_plausibility_checks:
