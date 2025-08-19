@@ -33,11 +33,18 @@ footer{visibility:hidden;}
 st.markdown(hide_menu, unsafe_allow_html=True)
 
 st.write("""
-# Startpage
-## HSG Sim Datatool
+# HSG Sim Datatool
+
+Welcome to the **HSG Sim Datatool**!  
+
+First, add your time series data, and then you can perform the plausibility test.  
+
+Please select it in the **table of contents** on the left.
+
+### Steps to Get Started:
+1. **Upload your time series data.**
+2. **Select the data from the table of contents.**
+3. **Perform the plausibility test.**
+
+If you have any questions, feel free to reach out for help!
 """)
-
-st.write("")
-
-
-
