@@ -15,8 +15,8 @@ from sympy.codegen.cfunctions import isnan
 data_filling_fun_dict = {"Null": d_f.fill_nan_null,
                          "Interpolation": d_f.fill_nan_interp,
                          "Regression": None,
-                         "Mittelwert": d_f.fill_nan_mean,
-                         "Gleitendes Mittel": d_f.fill_nan_rollmean}
+                         "Average": d_f.fill_nan_mean,
+                         "Moving average": d_f.fill_nan_rollmean}
 
 register_plotly_resampler(mode="auto", default_n_shown_samples=50000)
 
@@ -67,15 +67,15 @@ col5, col6 = st.columns(2)
 
 try:
     if "measurement_dict" in st.session_state:
-        chosen_measurement_name = col5.selectbox("Choose Timeseries", st.session_state["measurement_dict"])
+        chosen_measurement_name = col5.selectbox("Choose time series", st.session_state["measurement_dict"])
         chosen_measurement = st.session_state["measurement_dict"][chosen_measurement_name]
-        show_measurement = col6.select_slider("Show Timeseries:", ["", " "])
+        show_measurement = st.checkbox("Show time series?", ["", " "])
     else:
         st.session_state["measurement_dict"] = {}
         chosen_measurement = None
         show_measurement = None
 except KeyError:
-    st.error("Keine Messreihe ausgewählt")
+    st.error("No time series selected")
 
 if chosen_measurement and show_measurement == " ":
     pd.options.plotting.backend = "plotly"
@@ -211,25 +211,25 @@ if check_jump:
 
 
 col1.write("Plausibility Tests:")
-fill_gaps = col1.checkbox('Datenlücken füllen?')
+fill_gaps = col1.checkbox('Filling data gaps?')
 if fill_gaps:
-    selected_fill_method = col1.selectbox("Methode zur Füllung der Daten auswählen", ["Interpolation", "Regression",
-                                                                                      "Null", "Mittelwert",
-                                                                                      "Gleitendes Mittel"],
+    selected_fill_method = col1.selectbox("Select method for filling data gaps", ["Interpolation", "Regression",
+                                                                                      "Null", "Average",
+                                                                                      "Moving average"],
                                           key="selected_fill_method")
 do_plausibility_checks = col1.button("Started plausibility tests")
 
 
 if do_plausibility_checks:
-    with (st.spinner("Datenprüfung wird ausgeführt")):
+    with (st.spinner("Data check is being performed")):
         df_raw = chosen_measurement.raw_df.copy()
         df_valid = chosen_measurement.raw_df.copy()
         df_valid["ABC"] = False # Range
         df_valid["DK"] = False # Gap
-        df_valid["E"] = False # Konstanz
-        df_valid["F"] = False # Ausreisser
+        df_valid["E"] = False # Constanz
+        df_valid["F"] = False # Outlier
         df_valid["G"] = False # Gradient
-        df_valid["H"] = False # Rauschen
+        df_valid["H"] = False # Noise
         df_valid["I"] = False # Drift
         df_valid["J"] = False # Shift
 
@@ -388,8 +388,8 @@ if do_plausibility_checks:
         st.session_state["validation_check_iteration_nr"] = 0
         chosen_measurement.validated_df = st.session_state["changed_df"]
 
-        tab1.success(f'Die validierten Daten wurden zur Messreihe '
-                     f'{chosen_measurement.name} hinzugefügt.')
+        tab1.success(f'The validated data was added to the time series '
+                     f'{chosen_measurement.name}.')
 
         # http://hclwizard.org:3000/hclwizard/
         # can be updated if there are better ideas
@@ -452,7 +452,7 @@ if do_plausibility_checks:
         )
 
 
-tab2.markdown('<p class="small-font-red">Händische Datenprüfung ist noch in der Entwicklung!</p>',
+tab2.markdown('<p class="small-font-red">Manual data verification is still under development!</p>',
               unsafe_allow_html=True)
 
 
