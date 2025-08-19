@@ -21,7 +21,11 @@ Short description on how to install and run the webapp locally.
 3. Clone the GitLab Repository to your PC: `git clone https://gitlab.com/rhaberme/hsg_data_validation.git`
 4. Install all requirements: `pip install -r requirements.txt`
 
-### Running the web app
+### Access
+Link to the deployed Webapp:
+https://hsgdatatool.streamlit.app/
+
+### Running the web app locally
 Run the webapp using `streamlit run Webtool/Start.py`
 - If this doesn't work use `python -m streamlit run Webtool/Start.py`
 
