@@ -39,17 +39,14 @@ st.markdown("""
 }
 </style>""", unsafe_allow_html=True)
 
-
-st.write("""
-# Add time series data
-""")
+# Main area content
+st.title("Upload data")
+st.write("Here you can upload the time series for plausibility tests.")
 
 col1, col2 = st.columns(2)
 
 lat = None
 lon = None
-
-
 
 
 measurment_number = st.text_input("Measuring point ID:")
