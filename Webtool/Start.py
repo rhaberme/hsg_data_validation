@@ -17,7 +17,7 @@
 import streamlit as st
 
 st.set_page_config(
-    page_title="HSG Sim Datentool",
+    page_title="HSG Sim Datatool",
     page_icon="HSG",
     layout="centered"
     # initial_sidebar_state="collapsed",
@@ -33,8 +33,8 @@ footer{visibility:hidden;}
 st.markdown(hide_menu, unsafe_allow_html=True)
 
 st.write("""
-# Startseite
-## HSG Sim Datentool
+# Startpage
+## HSG Sim Datatool
 """)
 
 st.write("")
