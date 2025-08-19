@@ -61,7 +61,7 @@ st.write("""
 # Plausibility Tests
 """
          )
-st.sidebar.markdown("Checking the timeseries for plausibility")
+st.sidebar.markdown("Checking the time series for plausibility")
 
 col5, col6 = st.columns(2)
 
@@ -360,7 +360,7 @@ if do_plausibility_checks:
         df_I.iloc[indices_of_I] = chosen_measurement.raw_df.iloc[indices_of_I]
         df_J.iloc[indices_of_J] = chosen_measurement.raw_df.iloc[indices_of_J]
 
-        tab1.write("Timeseries after validation:")
+        tab1.write("Time series after validation:")
         changed_df_with_deleted_and_new = df_filled.copy()
         if "status" in changed_df_with_deleted_and_new:
             changed_df_with_deleted_and_new.drop(["status"], axis=1, inplace=True)
@@ -412,7 +412,7 @@ if do_plausibility_checks:
         fig = fig.add_trace(go.Scatter(
             x = changed_df_with_deleted_and_new.index,
             y=changed_df_with_deleted_and_new['value'],
-            name=f"Validated Timeseries {chosen_measurement.name}"
+            name=f"Validated time series {chosen_measurement.name}"
         ))
         for name, values in changed_df_with_deleted_and_new.items():
             if name == "value":
@@ -444,7 +444,7 @@ if do_plausibility_checks:
         csv = convert_for_download(df_download)
 
         st.download_button(
-            label="Download validated timeseries",
+            label="Download validated time series",
             data=csv,
             file_name="validated_timeseries.csv",
             mime="text/csv",

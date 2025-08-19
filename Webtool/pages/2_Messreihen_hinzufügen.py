@@ -41,7 +41,7 @@ st.markdown("""
 
 
 st.write("""
-# add data
+# Add time series data
 """)
 
 col1, col2 = st.columns(2)
@@ -51,16 +51,11 @@ lon = None
 
 
 
-st.write("""
-## add time series
-""")
-
-
 
 measurment_number = st.text_input("Measuring point ID:")
 name = st.text_input("Time series name:")
 
-from_file_exp = st.expander("Load measurement series from file", expanded=True)
+from_file_exp = st.expander("Load time series from file", expanded=True)
 
 
 

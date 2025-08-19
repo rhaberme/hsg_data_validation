@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'hsg_data_validation'
-copyright = '2024, HSGSim Arbeitsgruppe "Messdaten und Machine Learning"'
+copyright = '2025, HSGSim Arbeitsgruppe "Messdaten und Machine Learning"'
 author = 'HSGSim Arbeitsgruppe "Messdaten und Machine Learning"'
 
 # -- General configuration ---------------------------------------------------
