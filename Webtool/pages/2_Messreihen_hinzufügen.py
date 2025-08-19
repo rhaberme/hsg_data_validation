@@ -5,7 +5,7 @@ import streamlit as st
 import pathlib
 
 st.set_page_config(
-    page_title="HSG Sim Datentool",
+    page_title="HSG Sim Datatool",
     page_icon="HSG",
     layout="centered"
 

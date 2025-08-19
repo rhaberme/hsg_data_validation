@@ -21,7 +21,7 @@ data_filling_fun_dict = {"Null": d_f.fill_nan_null,
 register_plotly_resampler(mode="auto", default_n_shown_samples=50000)
 
 st.set_page_config(
-    page_title="HSG Sim Datentool",
+    page_title="HSG Sim Datatool",
     page_icon="HSG",
     layout="centered"
 )
