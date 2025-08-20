@@ -49,7 +49,6 @@ lat = None
 lon = None
 
 
-measurment_number = st.text_input("Measuring point ID:")
 name = st.text_input("Time series name:")
 
 from_file_exp = st.expander("Load time series from file", expanded=True)
