@@ -37,7 +37,7 @@ st.write("""
 ## HSG Sim Datentool
 """)
 
-st.write("Nutzungsbedingungen für HSGSim Data Tool
+st.write("""Nutzungsbedingungen für HSGSim Data Tool
 Stand: 17. Juni 2025
 § 1 Geltungsbereich und Anbieter
 (1) Diese Nutzungsbedingungen regeln die Nutzung des auf der Webseite https://hsgdatatool.streamlit.app/ unentgeltlich zur Verfügung gestellten Online-Tools (nachfolgend „Dienst“).
@@ -80,7 +80,7 @@ Gebäude: 14, Raum: 320
 Kontakt:
 E-Mail: info@hsgsim.org
 
-")
+""")
 
 
 
