@@ -36,6 +36,16 @@ st.markdown("""
 
 # Main area content
 st.title("Impressum")
-st.write("""Hochschulgruppe Simulation vertreten durch: Ralf Habermehl \n Paul-Ehrlich-Straße 14 \n Gebäude: 14, Raum: 320 \n 67663 Kaiserslautern
-
-Kontakt: E-Mail: info@hsgsim.org""")
+st.write("""
+    Hochschulgruppe Simulation [https://hsgsim.org/] represented by: Ralf Habermehl
+    
+    Paul-Ehrlich-Straße 14
+    
+    Building: 14
+    
+    Room: 320
+    
+    67663 Kaiserslautern
+    
+    Contact: E-Mail: info@hsgsim.org
+    """)
