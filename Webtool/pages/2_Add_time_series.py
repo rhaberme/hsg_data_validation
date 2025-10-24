@@ -57,7 +57,7 @@ from_file_exp = st.expander("Load time series from file", expanded=True)
 
 status_available = from_file_exp.checkbox("Status available?")
 datetime_in_two_col = from_file_exp.checkbox("Date and time provided in seperate columns?",
-                                             value=True)
+                                             value=False)
 
 
 # with st.form(key='add_measurement_form'):
@@ -91,7 +91,7 @@ if st.session_state["measurement_uploader"]:
 
 label_value = from_file_exp.selectbox("Name of the measurment-column", st.session_state["column_names"],
                                       index=st.session_state["column_names"].get_loc("value")
-                                      if "value" in st.session_state["column_names"] else 0)
+                                      if "value" in st.session_state["column_names"] else 1)
 
 if datetime_in_two_col:
     label_date = from_file_exp.selectbox("Name of the date-column", st.session_state["column_names"],
