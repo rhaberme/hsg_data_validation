@@ -45,7 +45,7 @@ def create_df_data_from_csv(filepath: str,
     # Times: Accept whatever pd.to_datetime accepts
     if len(date_time_col_name_s) == 2:
         df_data = pd.read_csv(filepath, sep=sep)
-        date = (pd.to_datetime(df_data[date_time_col_name_s[0]], utc=True, format='mixed') +
+        date = (pd.to_datetime(df_data[date_time_col_name_s[0]], utc=True) +
                     pd.to_timedelta(df_data[date_time_col_name_s[1]]))
         df_data.insert(0, "unixtime", date)
         df_data.drop(date_time_col_name_s, axis=1, inplace=True)
@@ -57,7 +57,7 @@ def create_df_data_from_csv(filepath: str,
             print(filepath)
             df_data = pd.read_csv(filepath, sep=";")
         dt_col_name = date_time_col_name_s[0]
-        df_data[dt_col_name] = pd.to_datetime(df_data[dt_col_name], utc=True, format='mixed')
+        df_data[dt_col_name] = pd.to_datetime(df_data[dt_col_name], utc=True)
 
     df_data = df_data.rename(columns={dt_col_name: "unixtime"})
     df_data = df_data.set_index("unixtime")
