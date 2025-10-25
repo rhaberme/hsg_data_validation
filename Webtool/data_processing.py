@@ -44,8 +44,12 @@ def create_df_data_from_csv(filepath: str,
     # Do in separate function and call here
     # Times: Accept whatever pd.to_datetime accepts
     if len(date_time_col_name_s) == 2:
-        df_data = pd.read_csv(filepath, parse_dates=[date_time_col_name_s], sep=sep)
-        dt_col_name = date_time_col_name_s[0] + "_" + date_time_col_name_s[1]
+        df_data = pd.read_csv(filepath, sep=sep)
+        date = (pd.to_datetime(df_data[date_time_col_name_s[0]], utc=True) +
+                    pd.to_datetime(df_data[date_time_col_name_s[1]], utc=True))
+        df_data.insert(0, "unixtime", date)
+        df_data.drop(date_time_col_name_s, axis=1, inplace=True)
+        dt_col_name = "unixtime"
     else:
         try:
             df_data = pd.read_csv(filepath, sep=sep)
