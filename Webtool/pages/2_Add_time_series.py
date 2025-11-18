@@ -114,7 +114,7 @@ else:
     label_status = None
     accepted_status = None
 
-if "measurment_dict" not in st.session_state:
+if "measurement_dict" not in st.session_state:
     st.session_state["measurement_dict"] = {}
 measurement_submit_button = from_file_exp.button(label='Add data')
 if measurement_submit_button:
