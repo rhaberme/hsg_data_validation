@@ -49,7 +49,7 @@ lat = None
 lon = None
 
 
-name = st.text_input("Time series name:")
+name = st.text_input("Time series name:", placeholder="Enter time series name. Defaults to filename and column.")
 
 from_file_exp = st.expander("Load time series from file", expanded=True)
 
@@ -119,7 +119,11 @@ if "measurment_dict" not in st.session_state:
 measurement_submit_button = from_file_exp.button(label='Add data')
 if measurement_submit_button:
     with st.spinner('Time series is added...'):
+        # If no name is given, use filename + column name
+        if name == "":
+            name = st.session_state["measurement_uploader"].name + " " + label_value
 
+        # Load data
         measurement_instance = Measurement(filepath=filepath, name=name,
                                            measurement_type=None, label_value=label_value,
                                            label_date_time=label_date_time, status_available=status_available,
