@@ -56,7 +56,6 @@ class Measurement:
         self.validated_df = validated_df
         self.name = name
         self.measurement_type = measurement_type
-        self.year = self.recognize_year()
         self.label_value = label_value
         self.label_date_time = label_date_time
         self.label_status = label_status
@@ -85,9 +84,5 @@ class Measurement:
             return pd.DataFrame([])
         df.index = df.index.map(d_p.unixtime_to_dt64)
         return df
-
-    def recognize_year(self):
-        year = d_p.unixtime_to_dt64(self.raw_df.index.values[-120]).astype(object).year  # index = -120 as a workaround
-        return year
 
 
