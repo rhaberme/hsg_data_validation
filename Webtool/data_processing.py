@@ -88,6 +88,37 @@ def drop_duplicated_indices(df_data):
     return df[~df.index.duplicated(keep='first')]
 
 
+def check_timesteps(df_data):
+    checktimes = np.insert(
+        np.diff(df_data.index.values).astype('timedelta64[s]').astype(float),
+        0, np.nan
+    )
+
+    # Frequency table
+    counts = pd.DataFrame({'checktimes': checktimes})
+    counts_freq = counts.value_counts().reset_index(name="Freq")
+    counts_freq = counts_freq.sort_values(by="Freq", ascending=False)
+
+    return counts_freq
+
+
+def resample_df(df_data, sampling_freq):
+    df_resampled = df_data.copy()
+
+    # Round to nearest sampling time
+    min_t = df_resampled.index.min()
+    df_resampled.index = map(int, np.round(np.round((df_resampled.index - min_t)/ sampling_freq)*sampling_freq + min_t))
+
+    # Remove duplicates caused by rounding
+    df_resampled = drop_duplicated_indices(df_resampled)
+
+    # Insert NaN if not meeting sampling time
+    resampled_index = np.arange(df_resampled.index.min(), df_resampled.index.max()+1, sampling_freq)
+    df_resampled = df_resampled.reindex(resampled_index)
+
+    return df_resampled
+
+
 def replace_status_informations_with_binary(df_data, allowed_status=None, status_col_name="status"):
     df_data_copy = df_data.copy()
     if allowed_status is None:

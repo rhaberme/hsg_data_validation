@@ -1,5 +1,7 @@
 from Measurement import Measurement
 import help_functions as s_f
+import data_processing as d_p
+import data_filling as d_f
 import pandas as pd
 import streamlit as st
 import pathlib
@@ -85,7 +87,6 @@ if st.session_state["measurement_uploader"]:
             column_names = current_column_names
             sep = sep_
 
-
     st.session_state["column_names"] = column_names
 
 
@@ -107,6 +108,28 @@ else:
     label_date_time_string = from_file_exp.selectbox("Name of the timedate-column", st.session_state["column_names"])
     label_date_time = [label_date_time_string]
 
+
+timesteps = []
+if st.session_state["measurement_uploader"] and label_date_time is not None:
+    try:
+        raw_df = d_p.create_df_data_from_csv(filepath, date_time_col_name_s=label_date_time,
+                                             value_col_name=label_value,
+                                             ambiguous=False,
+                                             status_available=status_available,
+                                             sep=sep
+                                             )
+        timesteps = list(map(int, d_p.check_timesteps(raw_df)["checktimes"].tolist()))
+    except KeyError:
+        pass
+
+sampling_freq = from_file_exp.selectbox("Sampling frequency [s]", timesteps, index=0, accept_new_options=True)
+fill_resampling = from_file_exp.selectbox("Resampling fill method (Leave empty to fill after plausibility tests)", d_f.data_filling_fun_dict, index=None)
+if sampling_freq not in timesteps and sampling_freq is not None:
+    st.warning("Sampling frequency is not yet in the time series. This might cause strange results if it is not a integer division of one of the sampling frequencies.")
+
+if sampling_freq is not None:
+    sampling_freq = int(sampling_freq)
+
 if status_available:
     label_status = from_file_exp.selectbox("Name of the status-column", st.session_state["column_names"])
     accepted_status = from_file_exp.text_input("Accepted status")
@@ -126,8 +149,9 @@ if measurement_submit_button:
         # Load data
         measurement_instance = Measurement(filepath=filepath, name=name,
                                            measurement_type=None, label_value=label_value,
-                                           label_date_time=label_date_time, status_available=status_available,
-                                           label_status=label_status, accepted_status=accepted_status, sep=sep,
-                                           drop_duplicates=True)
+                                           label_date_time=label_date_time, sampling_freq=sampling_freq,
+                                           fill_resampling=fill_resampling,
+                                           status_available=status_available, label_status=label_status,
+                                           accepted_status=accepted_status, sep=sep, drop_duplicates=True)
         st.session_state["measurement_dict"][measurement_instance.name] = measurement_instance
     st.success(f'The time series {name} has been successfully added.')

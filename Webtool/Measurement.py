@@ -16,6 +16,7 @@
 
 import pandas as pd
 import data_processing as d_p
+import data_filling as d_f
 from typing import Union
 
 
@@ -34,6 +35,9 @@ class Measurement:
                  sep: Union[str, None] = ",",
                  measurement_number=None,
                  drop_duplicates=False,
+                 sampling_freq=None,
+                 resample=True,
+                 fill_resampling=None,
                  are_outliers=None,
                  treshold_value=None,
                  hysteresis=None
@@ -53,6 +57,13 @@ class Measurement:
 
         if drop_duplicates:
             self.raw_df = d_p.drop_duplicated_indices(self.raw_df)
+
+        # resampling
+        if resample:
+            self.raw_df = d_p.resample_df(self.raw_df, sampling_freq)
+            if fill_resampling is not None:
+                self.raw_df = d_f.data_filling_fun_dict[fill_resampling](self.raw_df)
+
         self.validated_df = validated_df
         self.name = name
         self.measurement_type = measurement_type

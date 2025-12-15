@@ -12,12 +12,6 @@ from sympy.codegen.cfunctions import isnan
 
 # Todo: add anomalie classes
 
-data_filling_fun_dict = {"Null": d_f.fill_nan_null,
-                         "Interpolation": d_f.fill_nan_interp,
-                         "Regression": None,
-                         "Average": d_f.fill_nan_mean,
-                         "Moving average": d_f.fill_nan_rollmean}
-
 register_plotly_resampler(mode="auto", default_n_shown_samples=50000)
 
 st.set_page_config(
@@ -95,7 +89,7 @@ if chosen_measurement and show_measurement:
     fig.update_layout(showlegend=False, xaxis_title="", yaxis_title="Messung",
                       plot_bgcolor="white", margin=dict(t=40, r=0, l=0))
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
 tab1, tab2 = st.tabs(["Automatic Check", "Manual Check"])
 col1, col2 = tab1.columns(2)
@@ -327,10 +321,8 @@ if do_plausibility_checks:
         df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="I")
         df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="J")
 
-        if fill_gaps and "selected_fill_method" in st.session_state.keys() and st.session_state[
-            "selected_fill_method"] != "Regression":
-            df_filled = data_filling_fun_dict[selected_fill_method](
-                df_raw) if selected_fill_method else df_raw
+        if fill_gaps and "selected_fill_method" in st.session_state.keys():
+            df_filled = d_f.data_filling_fun_dict[selected_fill_method](df_raw) if selected_fill_method else df_raw
         else:
             df_filled = df_raw.copy()
 
@@ -438,7 +430,7 @@ if do_plausibility_checks:
         fig.update_layout(showlegend=True, xaxis_title="", yaxis_title="Messung",
                           plot_bgcolor="white", margin=dict(t=40, r=1, l=1))
 
-        tab1.plotly_chart(fig, use_container_width=True)
+        tab1.plotly_chart(fig, width='stretch')
 
 
         @st.cache_data

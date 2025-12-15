@@ -40,3 +40,10 @@ def fill_nan_rollmean(df_data, value_col_name="value"):
 
     df_data_copy[value_col_name] = df_data_copy[value_col_name].fillna(df_interp[value_col_name].rolling(window=10).mean())
     return df_data_copy
+
+
+# Dict defining the data filling functions
+data_filling_fun_dict = {"Null": fill_nan_null,
+                         "Interpolation": fill_nan_interp,
+                         "Average": fill_nan_mean,
+                         "Moving average": fill_nan_rollmean}
