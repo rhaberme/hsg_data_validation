@@ -1,3 +1,4 @@
+import copy
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -69,6 +70,18 @@ Try to start with small datasets and with the simpler tests.
 """)
 
 col5, col6 = st.columns(2)
+
+# Add Measurement if coming from processing
+if "measurement_add_button" in st.session_state and st.session_state["measurement_add_button"]:
+    with st.spinner('Adding Timeseries...'):
+        measurement_updated = st.session_state["measurement_updated"]
+        # If no name is given, use filename + column name
+        if st.session_state["measurement_add_name"] == "":
+            st.session_state["measurement_add_name"] = measurement_updated.name + " processed"
+        measurement_updated.name = st.session_state["measurement_add_name"]
+        # Add to dict
+        st.session_state["measurement_dict"][measurement_updated.name] = measurement_updated
+    st.success(f'The time series {measurement_updated.name} has been successfully added.')
 
 try:
     if "measurement_dict" in st.session_state:
@@ -432,6 +445,14 @@ if do_plausibility_checks:
 
         tab1.plotly_chart(fig, width='stretch')
 
+        measurement_add_col1, measurement_add_col2 = tab1.columns([2, 1])
+        measurement_add_col1.text_input("Time series name:", placeholder=f"Enter time series name. Defaults to adding '{chosen_measurement.name} processed'.", key="measurement_add_name")
+        measurement_add_col2.button(label='Add to selectable timeseries', key="measurement_add_button")
+
+        #save updated measurement
+        measurement_updated = copy.deepcopy(chosen_measurement)
+        measurement_updated.raw_df = measurement_updated.validated_df.copy()
+        st.session_state["measurement_updated"] = measurement_updated
 
         @st.cache_data
         def convert_for_download(df):
@@ -453,7 +474,6 @@ if do_plausibility_checks:
             mime="text/csv",
             icon=":material/download:",
         )
-
 
 tab2.markdown('<p class="small-font-red">Manual data verification is still under development!</p>',
               unsafe_allow_html=True)
