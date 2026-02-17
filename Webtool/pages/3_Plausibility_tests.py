@@ -99,7 +99,7 @@ if chosen_measurement and show_measurement:
     pd.options.plotting.backend = "plotly"
     fig = chosen_measurement.return_df_as_datetime(raw=True)["value"].plot(title="", template="simple_white")
 
-    fig.update_layout(showlegend=False, xaxis_title="", yaxis_title="Messung",
+    fig.update_layout(showlegend=False, xaxis_title="", yaxis_title=chosen_measurement.label_value,
                       plot_bgcolor="white", margin=dict(t=40, r=0, l=0))
 
     st.plotly_chart(fig, width='stretch')
@@ -440,7 +440,7 @@ if do_plausibility_checks:
                 mode="markers",
                 marker=dict(color=anomaly_print_dict[name]['color'],),
             ))
-        fig.update_layout(showlegend=True, xaxis_title="", yaxis_title="Messung",
+        fig.update_layout(showlegend=True, xaxis_title="", yaxis_title=chosen_measurement.label_value,
                           plot_bgcolor="white", margin=dict(t=40, r=1, l=1))
 
         tab1.plotly_chart(fig, width='stretch')

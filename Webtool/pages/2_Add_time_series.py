@@ -90,7 +90,7 @@ if st.session_state["measurement_uploader"]:
     st.session_state["column_names"] = column_names
 
 
-label_value = from_file_exp.selectbox("Name of the measurment-column", st.session_state["column_names"],
+label_value = from_file_exp.selectbox("Name of the measurement-column", st.session_state["column_names"],
                                       index=st.session_state["column_names"].get_loc("value")
                                       if "value" in st.session_state["column_names"] else 1)
 
