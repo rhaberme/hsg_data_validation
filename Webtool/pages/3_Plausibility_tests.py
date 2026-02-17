@@ -130,23 +130,21 @@ if check_constancy:
         st.session_state['constancy_method'] = st.selectbox("Constancy Test Methode", constancy_methods)
         if st.session_state['constancy_method'] == "threshold":
             st.session_state['constancy_window'] = st.number_input("Window of the rolling difference", min_value=1,
-                                                         max_value=10000, value=2, step=1)
-            #st.session_state['threshold'] = st.number_input("Constancy Treshold", min_value=1e-10, max_value=1e-6, value=1e-8)
-            st.session_state['constancy_threshold'] = 1e-8
+                                                                   value=2, step=1)
+            st.session_state['constancy_threshold'] = st.number_input("Constancy Treshold", min_value=0.0, value=1e-8,
+                                                                      format="%0.f")
             st.session_state['constancy_min_std'] = 0
         else:
             st.session_state['constancy_window'] = st.number_input("Window of the rolling difference", min_value=1,
-                                                         max_value=10000, value=2, step=1)
+                                                                   value=2, step=1)
             st.session_state['constancy_threshold'] = 0
-            st.session_state['constancy_min_std'] = st.number_input("Min. STD", min_value=0.01,
-                                                         max_value=100000.0, value=2.0)
+            st.session_state['constancy_min_std'] = st.number_input("Min. STD", min_value=0.0, value=2.0)
 
 check_range = col1.checkbox('Range',
                             help="https://gitlab.com/rhaberme/hsg_data_validation/-/wikis/check_range")
 if check_range:
     exp_ = col2.expander("Settings 'Range'")
     with exp_:
-
         st.session_state['range_check_lower_border'] = st.number_input("Lower Border", value=0.0)
         st.session_state['range_check_upper_border'] = st.number_input("Upper Border", value=5.0)
 
@@ -163,12 +161,12 @@ if check_outlier:
         outlier_methods = ["iqr_method", "std_method"]
         st.session_state['outlier_method'] = st.selectbox("Outlier Test Methode", outlier_methods)
         if st.session_state['outlier_method'] == "std_method":
-            st.session_state['outlier_std_multiplier'] = st.number_input("STD Multiplier", min_value=0.1,
-                                                         max_value=1000.0, value=3.0, step=0.1)
+            st.session_state['outlier_std_multiplier'] = st.number_input("STD Multiplier", min_value=0.0,
+                                                                         value=3.0, step=0.1)
             st.session_state['outlier_iqr_multiplier'] = None
         else:
-            st.session_state['outlier_iqr_multiplier'] = st.number_input("IQR Multiplier", min_value=0.1,
-                                                         max_value=1000.0, value=1.5, step=0.1)
+            st.session_state['outlier_iqr_multiplier'] = st.number_input("IQR Multiplier", min_value=0.0, value=1.0,
+                                                                         step=0.1)
             st.session_state['outlier_std_multiplier'] = None
 
 check_gradient = col1.checkbox('Gradient', disabled=False,
@@ -179,8 +177,7 @@ if check_gradient:
     with exp_:
 
         st.session_state['gradient_check_delta'] = st.number_input("Max. Delta per Timestep",
-                                                                   min_value=0.00,
-                                                                   max_value=10.00, value=1.50, step=0.01)
+                                                                   min_value=0.00, value=1.0, step=0.1)
 
 check_noise = col1.checkbox('Noise', disabled=False,
                             help="https://gitlab.com/rhaberme/hsg_data_validation/-/wikis/check_noise")
@@ -189,10 +186,9 @@ if check_noise:
     with exp_:
         st.write("")
 
-        st.session_state['noise_window_size'] = st.number_input("Window size of rolling std", min_value=1,
-                                                                max_value=1000, value=10, step=1)
-        st.session_state['noise_treshold'] = st.number_input("STD treshold", min_value=0.1,
-                                                                max_value=1000.0, value=10.0, step=0.1)
+        st.session_state['noise_window_size'] = st.number_input("Window size of rolling std", min_value=1, value=10,
+                                                                step=1)
+        st.session_state['noise_treshold'] = st.number_input("STD treshold", min_value=0.0, value=10.0, step=0.1)
 
 check_drift = col1.checkbox('Drift', disabled=False,
                             help="https://gitlab.com/rhaberme/hsg_data_validation/-/wikis/check_drift")
@@ -204,17 +200,16 @@ if check_drift:
 
         if st.session_state['drift_method'] == "mean":
             window=st.session_state['drift_window_size'] = st.number_input("Window for rolling mean", min_value=1,
-                                                                           max_value=1000, value=10, step=1)
-            threshold = st.session_state['drift_treshold'] = st.number_input("Treshold for rolling mean", min_value=0.1,
-                                                                             max_value=100.0, value=1.0, step=0.1)
+                                                                           value=10, step=1)
+            threshold = st.session_state['drift_treshold'] = st.number_input("Treshold for rolling mean", min_value=0.0,
+                                                                             value=1.0, step=0.1)
             st.session_state['drift_zero'] = None
         else:
             window = st.session_state['drift_window_size'] = st.number_input("Window for rolling mean", min_value=1,
-                                                                             max_value=1000, value=10, step=1)
-            threshold=st.session_state['drift_treshold'] = st.number_input("Treshold for rolling mean", min_value=0.1,
-                                                                             max_value=100.0, value=1.0, step=0.1)
-            st.session_state['drift_zero'] = st.number_input("Zero", min_value=-1000.0, max_value=1000.0, value=0.0,
-                                                             step=0.1)
+                                                                             value=10, step=1)
+            threshold=st.session_state['drift_treshold'] = st.number_input("Treshold for rolling mean", min_value=0.0,
+                                                                           value=1.0, step=0.1)
+            st.session_state['drift_zero'] = st.number_input("Zero", value=0.0, step=0.1)
 
 
 check_jump = col1.checkbox('Jump', disabled=False,
@@ -222,10 +217,10 @@ check_jump = col1.checkbox('Jump', disabled=False,
 if check_jump:
     exp_ = col2.expander("Settings 'Jump'")
     with exp_:
-        st.session_state['jump_window'] = st.number_input("Window for jump detection", min_value=1,
-                                                                             max_value=1000, value=10, step=1 )
+        st.session_state['jump_window'] = st.number_input("Window for jump detection", min_value=1, max_value=1000,
+                                                          value=10, step=1)
         threshold = st.session_state['jump_threshold'] =  st.number_input("Threshold for jump detection", min_value=0.0,
-                                                                             max_value=100000.0, value=2.0, step=1.0)
+                                                                          value=2.0, step=1.0)
 
 
 col1.write("Plausibility Tests:")
