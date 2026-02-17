@@ -124,11 +124,11 @@ if st.session_state["measurement_uploader"] and label_date_time is not None:
 
 sampling_freq = from_file_exp.selectbox("Sampling frequency [s]", timesteps, index=0, accept_new_options=True)
 fill_resampling = from_file_exp.selectbox("Resampling fill method (Leave empty to fill after plausibility tests)", d_f.data_filling_fun_dict, index=None)
-if sampling_freq not in timesteps and sampling_freq is not None:
-    st.warning("Sampling frequency is not yet in the time series. This might cause strange results if it is not a integer division of one of the sampling frequencies.")
 
 if sampling_freq is not None:
     sampling_freq = int(sampling_freq)
+if sampling_freq is not None and not (sampling_freq in timesteps or any(map(lambda ts: (ts/sampling_freq) %1 == 0 or (sampling_freq/ts) %1 == 0, timesteps))):
+    st.warning("Sampling frequency is not yet in the time series or an integer multiple/divisor of any of them. This might cause strange results.")
 
 if status_available:
     label_status = from_file_exp.selectbox("Name of the status-column", st.session_state["column_names"])
