@@ -363,7 +363,7 @@ if do_plausibility_checks:
         df_I = df_ABC.copy()
         df_J = df_ABC.copy()
         df_ABC.iloc[indices_of_ABC] = chosen_measurement.raw_df.iloc[indices_of_ABC]
-        df_DK.iloc[indices_of_DK] = chosen_measurement.raw_df.iloc[indices_of_DK]
+        df_DK.iloc[indices_of_DK] = chosen_measurement.raw_df.mean() # For DK, this is NaN which is not plotted. Plot point at mean instead.
         df_E.iloc[indices_of_E] = chosen_measurement.raw_df.iloc[indices_of_E]
         df_F.iloc[indices_of_F] = chosen_measurement.raw_df.iloc[indices_of_F]
         df_G.iloc[indices_of_G] = chosen_measurement.raw_df.iloc[indices_of_G]
