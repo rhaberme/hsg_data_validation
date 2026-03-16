@@ -470,6 +470,18 @@ if do_plausibility_checks:
             icon=":material/download:",
         )
 
+if chosen_measurement:
+    stats = chosen_measurement.return_df_as_datetime(raw=True)["value"].describe()
+    stats.name = chosen_measurement_name
+
+    if do_plausibility_checks:
+        stats_plaus = changed_df_with_deleted_and_new['value'].describe()
+        stats_plaus.name = "Processed"
+        stats = pd.concat([stats, stats_plaus], axis=1)
+
+    st.table(stats)
+
+
 tab2.markdown('<p class="small-font-red">Manual data verification is still under development!</p>',
               unsafe_allow_html=True)
 
