@@ -328,10 +328,11 @@ if do_plausibility_checks:
         df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="I")
         df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="J")
 
+        has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
+        df_filled = chosen_measurement.validated_df.copy() if has_validated else (
+            chosen_measurement.return_df_as_datetime(raw=True).copy())
         if fill_gaps and "selected_fill_method" in st.session_state.keys():
-            df_filled = d_f.data_filling_fun_dict[selected_fill_method](df_raw) if selected_fill_method else df_raw
-        else:
-            df_filled = df_raw.copy()
+            df_filled = d_f.data_filling_fun_dict[selected_fill_method](df_filled) if selected_fill_method else df_filled
 
         df_filled = d_p.df_to_datetime(df_filled)
 
@@ -581,9 +582,12 @@ if chosen_measurement:
                 selected_idx = [pt['x'] for pt in selected_detail_points]
                 selected_val = [pt['y'] for pt in selected_detail_points]
                 chosen_measurement.outlier_labels.loc[selected_idx, 'L'] = selected_val
-                if chosen_measurement.validated_df is None:
-                    chosen_measurement.validated_df = df_raw.copy()
+                has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
+                chosen_measurement.validated_df = chosen_measurement.validated_df.copy() if has_validated else (
+                    chosen_measurement.return_df_as_datetime(raw=True).copy())
                 chosen_measurement.validated_df[chosen_measurement.outlier_labels['L'].notna()] = np.nan
+
+                st.rerun()
 
     else:
         tab2.info("Choose range in the upper plot")
