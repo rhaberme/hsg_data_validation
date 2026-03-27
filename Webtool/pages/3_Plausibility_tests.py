@@ -505,9 +505,9 @@ if chosen_measurement:
         dragmode='select',
         selectdirection='h',
         showlegend=False,
-        height=200,
-        xaxis_title="Choose Range",
-        yaxis_title=chosen_measurement.label_value,
+        height=100,
+        xaxis_title="",
+        yaxis_title="",
         plot_bgcolor="white",
         margin=dict(t=20, r=1, l=1, b=20)
     )
@@ -533,7 +533,7 @@ if chosen_measurement:
         else:
             unregister_plotly_resampler()
             tab2.markdown(
-                f"**Chosen Range::** {t_min.strftime('%Y-%m-%d %H:%M')} bis {t_max.strftime('%Y-%m-%d %H:%M')}")
+                f"**Chosen Range:** {t_min.strftime('%Y-%m-%d %H:%M')} bis {t_max.strftime('%Y-%m-%d %H:%M')}")
             unregister_plotly_resampler()
 
             fig_detail = go.Figure()
