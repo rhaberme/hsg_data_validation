@@ -10,7 +10,22 @@ import data_processing as d_p
 import data_filling as d_f
 from Measurement import Measurement
 
-# Todo: add anomalie classes
+# http://hclwizard.org:3000/hclwizard/
+# can be updated if there are better ideas
+anomaly_print_dict = {
+    "ABC" : {"name": "Range (ABC)", "color": "#DB9D85"},
+#            "B": "#E093C3",
+#            "C": "#ACA4E2",
+    "DK" : {"name": "Gap (DK)", "color": "#4CB9CC"},
+#            "K": "#4CB9CC"
+    "E" : {"name": "Constancy (E)", "color": "#5CBD92"},
+    "F" : {"name": "Outliers (F)", "color": "#ABB065"},
+    "G" : {"name": "Gradient (G)", "color": "#DB9D85"},
+    "H" : {"name": "Noise (H)", "color": "#89D9CF"},
+    "I" : {"name": "Drift (I)", "color": "#AC7F21"},
+    "J" : {"name": "Jump (J)", "color": "#533600"},
+    "L" : {"name": "Manual (L)", "color": "#E093C3"}
+}
 
 register_plotly_resampler(mode="auto", default_n_shown_samples=50000)
 
@@ -404,29 +419,12 @@ if do_plausibility_checks:
         tab1.success(f'The validated data was added to the time series '
                      f'{chosen_measurement.name}.')
 
-        # http://hclwizard.org:3000/hclwizard/
-        # can be updated if there are better ideas
-        anomaly_print_dict = {
-            "ABC" : {"name": "Range (ABC)", "color": "#DB9D85"},
-#            "B": "#E093C3",
-#            "C": "#ACA4E2",
-            "DK" : {"name": "Gap (DK)", "color": "#4CB9CC"},
-#            "K": "#4CB9CC"
-            "E" : {"name": "Constancy (E)", "color": "#5CBD92"},
-            "F" : {"name": "Outliers (F)", "color": "#ABB065"},
-            "G" : {"name": "Gradient (G)", "color": "#DB9D85"},
-            "H" : {"name": "Noise (H)", "color": "#89D9CF"},
-            "I" : {"name": "Drift (I)", "color": "#AC7F21"},
-            "J" : {"name": "Jump (J)", "color": "#533600"},
-            "L" : {"name": "Manual (L)", "color": "#00FFEF"}
-        }
-
         pd.options.plotting.backend = "plotly"
         fig = go.Figure()
         fig = fig.add_trace(go.Scatter(
             x = changed_df_with_deleted_and_new.index,
             y=changed_df_with_deleted_and_new['value'],
-            name=f"Validated time series {chosen_measurement.name}"
+            name=f"Validated TS"
         ))
         for name, values in changed_df_with_deleted_and_new.items():
             if name == "value":
@@ -559,15 +557,26 @@ if chosen_measurement:
                 x=df_detail.index,
                 y=df_detail['value'],
                 mode='lines+markers',
-                name="Detail",
+                name="Validated TS",
                 marker=dict(size=4, color='#1f77b4'),
                 selected=dict(marker=dict(color='red', size=6)),
                 unselected=dict(marker=dict(opacity=0.3))
             ))
 
+            if hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None:
+                for outl in chosen_measurement.outlier_labels.columns:
+                    detail_outlier_pts = chosen_measurement.outlier_labels[outl][t_min:t_max]
+                    fig_detail = fig_detail.add_trace(go.Scattergl(
+                        x=detail_outlier_pts.index,
+                        y=detail_outlier_pts.values,
+                        name=anomaly_print_dict[outl]['name'],
+                        mode="markers",
+                        marker=dict(color=anomaly_print_dict[outl]['color'], ),
+                    ))
+
             fig_detail.update_layout(
                 dragmode='select',
-                showlegend=False,
+                showlegend=True,
                 height=500,
                 xaxis_title="Select invalid Points",
                 yaxis_title=chosen_measurement.label_value,
