@@ -573,21 +573,22 @@ if chosen_measurement:
             manual_label = "L"
             if selected_detail_points:
                 tab2.info(f"{len(selected_detail_points)} marked as Anomalies.")
-                if chosen_measurement.outlier_labels is None:
-                    chosen_measurement.outlier_labels = pd.DataFrame().reindex_like(
-                        chosen_measurement.return_df_as_datetime(raw=True))
-                    chosen_measurement.outlier_labels.rename(columns={"value": manual_label}, inplace=True)
-                if manual_label not in chosen_measurement.outlier_labels.columns:
-                    chosen_measurement.outlier_labels[manual_label] = np.nan
-                selected_idx = [pt['x'] for pt in selected_detail_points]
-                selected_val = [pt['y'] for pt in selected_detail_points]
-                chosen_measurement.outlier_labels.loc[selected_idx, 'L'] = selected_val
-                has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
-                chosen_measurement.validated_df = chosen_measurement.validated_df.copy() if has_validated else (
-                    chosen_measurement.return_df_as_datetime(raw=True).copy())
-                chosen_measurement.validated_df[chosen_measurement.outlier_labels['L'].notna()] = np.nan
-
-                st.rerun()
+                apply = tab2.button("Apply")
+                if apply:
+                    if chosen_measurement.outlier_labels is None:
+                        chosen_measurement.outlier_labels = pd.DataFrame().reindex_like(
+                            chosen_measurement.return_df_as_datetime(raw=True))
+                        chosen_measurement.outlier_labels.rename(columns={"value": manual_label}, inplace=True)
+                    if manual_label not in chosen_measurement.outlier_labels.columns:
+                        chosen_measurement.outlier_labels[manual_label] = np.nan
+                    selected_idx = [pt['x'] for pt in selected_detail_points]
+                    selected_val = [pt['y'] for pt in selected_detail_points]
+                    chosen_measurement.outlier_labels.loc[selected_idx, 'L'] = selected_val
+                    has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
+                    chosen_measurement.validated_df = chosen_measurement.validated_df.copy() if has_validated else (
+                        chosen_measurement.return_df_as_datetime(raw=True).copy())
+                    chosen_measurement.validated_df[chosen_measurement.outlier_labels['L'].notna()] = np.nan
+                    st.rerun()
 
     else:
         tab2.info("Choose range in the upper plot")
