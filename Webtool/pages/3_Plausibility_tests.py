@@ -491,7 +491,7 @@ if chosen_measurement:
         raw=True).copy()
 
     fig_manual = go.Figure()
-    fig_manual.add_trace(go.Scatter(
+    fig_manual.add_trace(go.Scattergl(
         x=df_manual.index,
         y=df_manual['value'],
         mode='lines+markers',
