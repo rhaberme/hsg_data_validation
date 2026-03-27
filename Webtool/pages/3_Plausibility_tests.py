@@ -481,8 +481,43 @@ if chosen_measurement:
 
     st.table(stats)
 
+tab2.markdown("### Manual Check")
+tab2.write(
+    "Use selection to mark not plausible data points")
 
-tab2.markdown('<p class="small-font-red">Manual data verification is still under development!</p>',
-              unsafe_allow_html=True)
+if chosen_measurement:
+    has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
+    df_manual = chosen_measurement.validated_df.copy() if has_validated else chosen_measurement.return_df_as_datetime(
+        raw=True).copy()
 
+    fig_manual = go.Figure()
+    fig_manual.add_trace(go.Scatter(
+        x=df_manual.index,
+        y=df_manual['value'],
+        mode='lines+markers',
+        name="time series (manuel check)"
+    ))
+
+    fig_manual.update_layout(
+        dragmode='select',
+        showlegend=False,
+        xaxis_title="",
+        yaxis_title=chosen_measurement.label_value,
+        plot_bgcolor="white",
+        margin=dict(t=40, r=1, l=1)
+    )
+
+    selection_event = tab2.plotly_chart(
+        fig_manual,
+        on_select="rerun",
+        selection_mode=('box', 'lasso'),
+        key="manual_selection",
+        width='stretch'
+    )
+
+    selected_points = selection_event.selection.get("points", [])
+
+    if selected_points:
+        tab2.info(f"{len(selected_points)} Datenpunkte ausgewählt.")
+        print(selected_points)
 
