@@ -568,7 +568,6 @@ if chosen_measurement:
             )
 
             selected_detail_points = detail_event.selection.get("points", [])
-            print(selected_detail_points)
 
             manual_label = "L"
             if selected_detail_points:
@@ -579,11 +578,12 @@ if chosen_measurement:
                     chosen_measurement.outlier_labels.rename(columns={"value": manual_label}, inplace=True)
                 if manual_label not in chosen_measurement.outlier_labels.columns:
                     chosen_measurement.outlier_labels[manual_label] = np.nan
-                selected_idx = [pt['point_index'] for pt in selected_detail_points]
+                selected_idx = [pt['x'] for pt in selected_detail_points]
                 selected_val = [pt['y'] for pt in selected_detail_points]
-                chosen_measurement.outlier_labels['L'].iloc[selected_idx] = selected_val
-                print(selected_idx)
-                print(chosen_measurement.outlier_labels)
+                chosen_measurement.outlier_labels.loc[selected_idx, 'L'] = selected_val
+                if chosen_measurement.validated_df is None:
+                    chosen_measurement.validated_df = df_raw.copy()
+                chosen_measurement.validated_df[chosen_measurement.outlier_labels['L'].notna()] = np.nan
 
     else:
         tab2.info("Choose range in the upper plot")
