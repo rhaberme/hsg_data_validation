@@ -491,10 +491,12 @@ tab2.write(
 if chosen_measurement:
     register_plotly_resampler(mode="auto", default_n_shown_samples=10000)
     has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
-    df_manual = chosen_measurement.validated_df.copy() if has_validated else chosen_measurement.return_df_as_datetime(
-        raw=True).copy()
+
+    df_raw = chosen_measurement.return_df_as_datetime(raw=True).copy()
+    df_manual = chosen_measurement.validated_df.copy() if has_validated else df_raw.copy()
 
     fig_context = go.Figure()
+
     fig_context.add_trace(go.Scattergl(
         x=df_manual.index,
         y=df_manual['value'],
@@ -503,6 +505,19 @@ if chosen_measurement:
         line=dict(color='#000000'),
         marker=dict(size=2, color='#000000')
     ))
+
+    if has_validated:
+        mask_diff = (df_raw['value'] != df_manual['value']) & df_raw['value'].notna()
+        df_removed = df_raw[mask_diff]
+
+        if not df_removed.empty:
+            fig_context.add_trace(go.Scattergl(
+                x=df_removed.index,
+                y=df_removed['value'],
+                mode='markers',
+                name="Removed/Flagged",
+                marker=dict(size=4, color='red')
+            ))
 
     fig_context.update_layout(
         dragmode='select',
