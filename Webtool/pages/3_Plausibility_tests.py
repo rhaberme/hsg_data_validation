@@ -486,38 +486,90 @@ tab2.write(
     "Use selection to mark not plausible data points")
 
 if chosen_measurement:
+    register_plotly_resampler(mode="auto", default_n_shown_samples=10000)
     has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
     df_manual = chosen_measurement.validated_df.copy() if has_validated else chosen_measurement.return_df_as_datetime(
         raw=True).copy()
 
-    fig_manual = go.Figure()
-    fig_manual.add_trace(go.Scattergl(
+    fig_context = go.Figure()
+    fig_context.add_trace(go.Scattergl(
         x=df_manual.index,
         y=df_manual['value'],
         mode='lines+markers',
-        name="time series (manuel check)"
+        name="Overview",
+        line=dict(color='#000000'),
+        marker=dict(size=2, color='#000000')
     ))
 
-    fig_manual.update_layout(
+    fig_context.update_layout(
         dragmode='select',
+        selectdirection='h',
         showlegend=False,
-        xaxis_title="",
+        height=200,
+        xaxis_title="Choose Range",
         yaxis_title=chosen_measurement.label_value,
         plot_bgcolor="white",
-        margin=dict(t=40, r=1, l=1)
+        margin=dict(t=20, r=1, l=1, b=20)
     )
 
-    selection_event = tab2.plotly_chart(
-        fig_manual,
+    context_event = tab2.plotly_chart(
+        fig_context,
         on_select="rerun",
-        selection_mode=('box', 'lasso'),
-        key="manual_selection",
+        key="context_selection",
         width='stretch'
     )
 
-    selected_points = selection_event.selection.get("points", [])
+    selected_context_points = context_event.selection.get("points", [])
+    if selected_context_points:
+        timestamps = [p["x"] for p in selected_context_points]
+        t_min = pd.to_datetime(min(timestamps))
+        t_max = pd.to_datetime(max(timestamps))
+        df_detail = df_manual.loc[t_min:t_max]
 
-    if selected_points:
-        tab2.info(f"{len(selected_points)} Datenpunkte ausgewählt.")
-        print(selected_points)
+        if len(df_detail) > 50000:
+            tab2.error(
+                f"Range is too big! The selected range contains {len(df_detail)} data points.")
 
+        else:
+            unregister_plotly_resampler()
+            tab2.markdown(
+                f"**Chosen Range::** {t_min.strftime('%Y-%m-%d %H:%M')} bis {t_max.strftime('%Y-%m-%d %H:%M')}")
+            unregister_plotly_resampler()
+
+            fig_detail = go.Figure()
+            fig_detail.add_trace(go.Scattergl(
+                x=df_detail.index,
+                y=df_detail['value'],
+                mode='lines+markers',
+                name="Detail",
+                marker=dict(size=4, color='#1f77b4'),
+                selected=dict(marker=dict(color='red', size=6)),
+                unselected=dict(marker=dict(opacity=0.3))
+            ))
+
+            fig_detail.update_layout(
+                dragmode='select',
+                showlegend=False,
+                height=500,
+                xaxis_title="Select invalid Points",
+                yaxis_title=chosen_measurement.label_value,
+                plot_bgcolor="white",
+                margin=dict(t=20, r=1, l=1)
+            )
+
+            detail_event = tab2.plotly_chart(
+                fig_detail,
+                on_select="rerun",
+                selection_mode=('box', 'lasso', 'points'),
+                key="detail_selection",
+                width='stretch'
+            )
+
+            selected_detail_points = detail_event.selection.get("points", [])
+            print(selected_detail_points)
+
+            if selected_detail_points:
+                tab2.warning(f"{len(selected_detail_points)} data points selected")
+
+    else:
+        tab2.info("Choose range in the upper plot")
