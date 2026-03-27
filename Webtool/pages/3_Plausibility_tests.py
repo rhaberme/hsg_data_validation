@@ -9,7 +9,6 @@ import data_plau as dplau
 import data_processing as d_p
 import data_filling as d_f
 from Measurement import Measurement
-from sympy.codegen.cfunctions import isnan
 
 # Todo: add anomalie classes
 
@@ -377,6 +376,8 @@ if do_plausibility_checks:
             changed_df_with_deleted_and_new.drop(["status"], axis=1, inplace=True)
 
         changed_df_with_deleted_and_new = d_p.df_to_datetime(changed_df_with_deleted_and_new)
+        if chosen_measurement.outlier_labels is not None:
+            changed_df_with_deleted_and_new = changed_df_with_deleted_and_new.join(chosen_measurement.outlier_labels)
         if check_range:
             changed_df_with_deleted_and_new["ABC"] = df_ABC.value
         if check_gap:
@@ -393,7 +394,7 @@ if do_plausibility_checks:
             changed_df_with_deleted_and_new["I"] = df_I.value
         if check_jump:
             changed_df_with_deleted_and_new["J"] = df_J.value
-        chosen_measurement.changed_df_with_deleted_and_new = changed_df_with_deleted_and_new
+        chosen_measurement.outlier_labels = changed_df_with_deleted_and_new.drop("value", axis=1)
         if hasattr(chosen_measurement, "days_changed_dict"):
             del chosen_measurement.__dict__["days_changed_dict"]
         st.session_state["validation_check_iteration_nr"] = 0
@@ -416,6 +417,7 @@ if do_plausibility_checks:
             "H" : {"name": "Noise (H)", "color": "#89D9CF"},
             "I" : {"name": "Drift (I)", "color": "#AC7F21"},
             "J" : {"name": "Jump (J)", "color": "#533600"},
+            "L" : {"name": "Manual (L)", "color": "#00FFEF"}
         }
 
         pd.options.plotting.backend = "plotly"
@@ -568,8 +570,20 @@ if chosen_measurement:
             selected_detail_points = detail_event.selection.get("points", [])
             print(selected_detail_points)
 
+            manual_label = "L"
             if selected_detail_points:
-                tab2.warning(f"{len(selected_detail_points)} data points selected")
+                tab2.info(f"{len(selected_detail_points)} marked as Anomalies.")
+                if chosen_measurement.outlier_labels is None:
+                    chosen_measurement.outlier_labels = pd.DataFrame().reindex_like(
+                        chosen_measurement.return_df_as_datetime(raw=True))
+                    chosen_measurement.outlier_labels.rename(columns={"value": manual_label}, inplace=True)
+                if manual_label not in chosen_measurement.outlier_labels.columns:
+                    chosen_measurement.outlier_labels[manual_label] = np.nan
+                selected_idx = [pt['point_index'] for pt in selected_detail_points]
+                selected_val = [pt['y'] for pt in selected_detail_points]
+                chosen_measurement.outlier_labels['L'].iloc[selected_idx] = selected_val
+                print(selected_idx)
+                print(chosen_measurement.outlier_labels)
 
     else:
         tab2.info("Choose range in the upper plot")
