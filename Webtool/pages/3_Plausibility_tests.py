@@ -118,6 +118,13 @@ if chosen_measurement and show_measurement:
 
     st.plotly_chart(fig, width='stretch')
 
+if chosen_measurement and chosen_measurement.outlier_labels is not None:
+    reset_detections = st.button("Reset current anomaly detections")
+
+    if reset_detections:
+        chosen_measurement.validated_df = None
+        chosen_measurement.outlier_labels = None
+
 tab1, tab2 = st.tabs(["Automatic Check", "Manual Check"])
 col1, col2 = tab1.columns(2)
 
@@ -346,13 +353,14 @@ if do_plausibility_checks:
         has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
         df_filled = chosen_measurement.validated_df.copy() if has_validated else (
             chosen_measurement.return_df_as_datetime(raw=True).copy())
+        df_filled.loc[df_raw["value"].isna().values] = np.nan
         if fill_gaps and "selected_fill_method" in st.session_state.keys():
             df_filled = d_f.data_filling_fun_dict[selected_fill_method](df_filled) if selected_fill_method else df_filled
 
         df_filled = d_p.df_to_datetime(df_filled)
 
         df_validated = df_filled.copy()
-        st.session_state["changed_df"] = df_validated
+        chosen_measurement.validated_df = df_validated.copy()
 
         indices_of_nan = pd.isnull(df_raw).any(axis=1).to_numpy().nonzero()[0]
 
@@ -414,7 +422,6 @@ if do_plausibility_checks:
         if hasattr(chosen_measurement, "days_changed_dict"):
             del chosen_measurement.__dict__["days_changed_dict"]
         st.session_state["validation_check_iteration_nr"] = 0
-        chosen_measurement.validated_df = st.session_state["changed_df"]
 
         tab1.success(f'The validated data was added to the time series '
                      f'{chosen_measurement.name}.')
@@ -578,7 +585,7 @@ if chosen_measurement:
                 dragmode='select',
                 showlegend=True,
                 height=500,
-                xaxis_title="Select invalid Points",
+                xaxis_title="Select Points",
                 yaxis_title=chosen_measurement.label_value,
                 plot_bgcolor="white",
                 margin=dict(t=20, r=1, l=1)
@@ -596,9 +603,10 @@ if chosen_measurement:
 
             manual_label = "L"
             if selected_detail_points:
-                tab2.info(f"{len(selected_detail_points)} marked as Anomalies.")
-                apply = tab2.button("Apply")
-                if apply:
+                tab2.info(f"{len(selected_detail_points)} selected.")
+                mark = tab2.button("Mark as Anomalies")
+                unmark = tab2.button("Unmark Anomalies")
+                if mark:
                     if chosen_measurement.outlier_labels is None:
                         chosen_measurement.outlier_labels = pd.DataFrame().reindex_like(
                             chosen_measurement.return_df_as_datetime(raw=True))
@@ -612,6 +620,20 @@ if chosen_measurement:
                     chosen_measurement.validated_df = chosen_measurement.validated_df.copy() if has_validated else (
                         chosen_measurement.return_df_as_datetime(raw=True).copy())
                     chosen_measurement.validated_df[chosen_measurement.outlier_labels['L'].notna()] = np.nan
+                    st.session_state["changed_df"] = chosen_measurement
+                    st.rerun()
+
+                if unmark:
+                    if chosen_measurement.outlier_labels is None:
+                        st.rerun()
+                    selected_idx = [pt['x'] for pt in selected_detail_points]
+                    selected_val = [pt['y'] for pt in selected_detail_points]
+                    chosen_measurement.outlier_labels.loc[selected_idx] = np.nan
+                    has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
+                    chosen_measurement.validated_df = chosen_measurement.validated_df.copy() if has_validated else (
+                        chosen_measurement.return_df_as_datetime(raw=True).copy())
+                    chosen_measurement.validated_df.loc[selected_idx, "value"] = selected_val
+                    st.session_state["changed_df"] = chosen_measurement
                     st.rerun()
 
     else:
