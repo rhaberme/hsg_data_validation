@@ -80,6 +80,27 @@ st.session_state["measurement_uploader"] = from_file_exp.file_uploader('Load fil
 if "column_names" not in st.session_state.keys():
     st.session_state["column_names"] = []
 
+CUSTOM_SEPARATOR = "__custom__"
+separator_options = {
+    "Auto-detect": None,
+    "Comma  ,": ",",
+    "Semicolon  ;": ";",
+    "Tab  \\t": "\t",
+    "Space": " ",
+    "Custom...": CUSTOM_SEPARATOR,
+}
+separator_choice = from_file_exp.selectbox("Separator", separator_options, index=0)
+selected_separator = separator_options[separator_choice]
+
+if selected_separator == CUSTOM_SEPARATOR:
+    selected_separator = from_file_exp.text_input(
+        "Custom separator", max_chars=8,
+        help="Entered literally, so a single character like | is what you want here. "
+             "Use the Tab option above for tab separated files.")
+    if selected_separator == "":
+        from_file_exp.info("No custom separator entered yet - detecting it automatically.")
+        selected_separator = None
+
 if st.session_state["measurement_uploader"]:
     current_directory = str(pathlib.Path(__file__).parent.resolve()).rstrip("pages")
     s_f.save_uploaded_file(uploadedfile=st.session_state["measurement_uploader"],
@@ -88,19 +109,17 @@ if st.session_state["measurement_uploader"]:
                            )
     filepath = current_directory + "tempDir/" + st.session_state[
         "measurement_uploader"].name
-    column_names = None
-    for sep_ in [",", ";", " "]:
-        current_column_names = pd.read_csv(filepath, on_bad_lines='skip', sep=sep_).columns
-        if column_names is not None:
-            if len(current_column_names) > len(column_names):
-                column_names = current_column_names
-                sep = sep_
+    sep = d_p.detect_separator(filepath) if selected_separator is None else selected_separator
 
-        else:
-            column_names = current_column_names
-            sep = sep_
+    try:
+        st.session_state["column_names"] = pd.read_csv(filepath, on_bad_lines='skip', sep=sep).columns
+    except (ValueError, pd.errors.ParserError) as parse_error:
+        st.session_state["column_names"] = []
+        st.error(f"Could not read the file with separator {sep!r}: {parse_error}")
 
-    st.session_state["column_names"] = column_names
+    if len(st.session_state["column_names"]) == 1:
+        st.warning(f"Separator {sep!r} splits the file into a single column. "
+                   "If that is not intended, pick a different separator above.")
 
 
 label_value = from_file_exp.selectbox("Name of the measurement-column", st.session_state["column_names"],

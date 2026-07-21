@@ -33,6 +33,28 @@ def df_to_datetime(df):
     return df_copy
 
 
+CANDIDATE_SEPARATORS = [",", ";", "\t", " "]
+
+
+def detect_separator(filepath: str, candidates: list = None):
+    if candidates is None:
+        candidates = CANDIDATE_SEPARATORS
+
+    best_separator = candidates[0]
+    best_column_count = 0
+    for candidate in candidates:
+        try:
+            # Only the header is needed to count columns, so stop after one row.
+            columns = pd.read_csv(filepath, on_bad_lines="skip", sep=candidate, nrows=1).columns
+        except (ValueError, pd.errors.ParserError, UnicodeDecodeError):
+            continue
+        if len(columns) > best_column_count:
+            best_separator = candidate
+            best_column_count = len(columns)
+
+    return best_separator
+
+
 def create_df_data_from_csv(filepath: str,
                             date_time_col_name_s: list,
                             value_col_name: str,
