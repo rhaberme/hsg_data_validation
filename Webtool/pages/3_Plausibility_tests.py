@@ -129,7 +129,8 @@ if chosen_measurement and chosen_measurement.outlier_labels is not None:
         chosen_measurement.validated_df = None
         chosen_measurement.outlier_labels = None
 
-tab1, tab2 = st.tabs(["Automatic Check", "Manual Check"])
+tab1, tab2 = st.tabs(["Automatic Check", "Manual Check"],
+                     key="plausibility_tabs", on_change="rerun")
 col1, col2 = tab1.columns(2)
 
 col1.write("Choose plausibility tests:")
@@ -248,14 +249,14 @@ if check_jump:
                                                                           value=2.0, step=1.0)
 
 
-col1.write("Plausibility Tests:")
-fill_gaps = col1.checkbox('Filling data gaps?')
+st.write("Plausibility Tests:")
+fill_gaps = st.checkbox('Filling data gaps?')
 if fill_gaps:
-    selected_fill_method = col1.selectbox("Select method for filling data gaps", ["Interpolation", "Regression",
+    selected_fill_method = st.selectbox("Select method for filling data gaps", ["Interpolation", "Regression",
                                                                                       "Null", "Average",
                                                                                       "Moving average"],
                                           key="selected_fill_method")
-do_plausibility_checks = col1.button("Start plausibility tests")
+do_plausibility_checks = st.button("Start plausibility tests")
 
 
 if do_plausibility_checks:
@@ -274,7 +275,7 @@ if do_plausibility_checks:
         if check_gap:
             df_inplausible = dplau.check_gaps(df_raw,
                                               custom_missing_values=st.session_state["gap_custom_missing_values"])
-            tab1.markdown(f"Plausibility test gap: {df_inplausible["Error"].sum()} inplausible data found.")
+            st.markdown(f"Plausibility test gap: {df_inplausible["Error"].sum()} inplausible data found.")
             df_valid.loc[df_inplausible["Error"], "DK"] = True
         #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
@@ -282,7 +283,7 @@ if do_plausibility_checks:
             df_inplausible = dplau.check_range(df_data=df_raw,
                                                upper_border=st.session_state['range_check_upper_border'],
                                                lower_border=st.session_state['range_check_lower_border'])
-            tab1.markdown(f"plausibility test range: {df_inplausible["Error"].sum()} inplausible data found.")
+            st.markdown(f"plausibility test range: {df_inplausible["Error"].sum()} inplausible data found.")
             df_valid.loc[df_inplausible["Error"], "ABC"] = True
         #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
@@ -293,7 +294,7 @@ if do_plausibility_checks:
                                                    min_std=st.session_state["constancy_min_std"],
                                                    value_col_name="value",
                                                    method=st.session_state["constancy_method"])
-            tab1.markdown(f"Plausibility test constancy: {df_inplausible["Error"].sum()} inplausible data found.")
+            st.markdown(f"Plausibility test constancy: {df_inplausible["Error"].sum()} inplausible data found.")
             df_valid.loc[df_inplausible["Error"], "E"] = True
         #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
@@ -304,7 +305,7 @@ if do_plausibility_checks:
                                                  std_multiplier=st.session_state['outlier_std_multiplier'],
                                                  iqr_multiplier=st.session_state['outlier_iqr_multiplier'])
 
-            tab1.markdown(f"plausibility test outlier: {df_inplausible["Error"].sum()} inplausible data found.")
+            st.markdown(f"plausibility test outlier: {df_inplausible["Error"].sum()} inplausible data found.")
             df_valid.loc[df_inplausible["Error"], "F"] = True
         #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
@@ -312,7 +313,7 @@ if do_plausibility_checks:
             df_inplausible = dplau.check_gradients(df_data=df_raw,
                                                    value_col_name="value",
                                                    gradient_threshold=st.session_state['gradient_check_delta'])
-            tab1.markdown(f"plausibility test gradient: {df_inplausible["Error"].sum()} inplausible data found.")
+            st.markdown(f"plausibility test gradient: {df_inplausible["Error"].sum()} inplausible data found.")
             df_valid.loc[df_inplausible["Error"], "G"] = True
         #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
@@ -321,7 +322,7 @@ if do_plausibility_checks:
                                                window_size=st.session_state['noise_window_size'],
                                                threshold=st.session_state['noise_treshold'],
                                                value_col="value")
-            tab1.markdown(f"plausibility test noise: {df_inplausible["Error"].sum()} inplausible data found.")
+            st.markdown(f"plausibility test noise: {df_inplausible["Error"].sum()} inplausible data found.")
             df_valid.loc[df_inplausible["Error"], "H"] = True
         #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
@@ -332,7 +333,7 @@ if do_plausibility_checks:
                                                zero=st.session_state['drift_zero'],
                                                method=st.session_state['drift_method'],
                                                value_col_name="value")
-            tab1.markdown(f"plausibility test drift: {df_inplausible["Error"].sum()} inplausible data found.")
+            st.markdown(f"plausibility test drift: {df_inplausible["Error"].sum()} inplausible data found.")
             df_valid.loc[df_inplausible["Error"], "I"] = True
         #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
@@ -341,7 +342,7 @@ if do_plausibility_checks:
                                                window=st.session_state['jump_window'],
                                                threshold=st.session_state['jump_threshold'],
                                                value_col_name="value")
-            tab1.markdown(f"plausibility test jumps: {df_inplausible["Error"].sum()} inplausible data found.")
+            st.markdown(f"plausibility test jumps: {df_inplausible["Error"].sum()} inplausible data found.")
             df_valid.loc[df_inplausible["Error"], "J"] = True
         #            df_raw = d_p.drop_implausible_measurements(df_raw, df_inplausible, inplausible_column_name="Error")
 
@@ -398,7 +399,7 @@ if do_plausibility_checks:
         df_I.iloc[indices_of_I] = chosen_measurement.raw_df.iloc[indices_of_I]
         df_J.iloc[indices_of_J] = chosen_measurement.raw_df.iloc[indices_of_J]
 
-        tab1.write("Time series after validation:")
+        st.write("Time series after validation:")
         changed_df_with_deleted_and_new = df_filled.copy()
         if "status" in changed_df_with_deleted_and_new:
             changed_df_with_deleted_and_new.drop(["status"], axis=1, inplace=True)
@@ -427,7 +428,7 @@ if do_plausibility_checks:
             del chosen_measurement.__dict__["days_changed_dict"]
         st.session_state["validation_check_iteration_nr"] = 0
 
-        tab1.success(f'The validated data was added to the time series '
+        st.success(f'The validated data was added to the time series '
                      f'{chosen_measurement.name}.')
 
         pd.options.plotting.backend = "plotly"
@@ -450,9 +451,9 @@ if do_plausibility_checks:
         fig.update_layout(showlegend=True, xaxis_title="", yaxis_title=chosen_measurement.label_value,
                           plot_bgcolor="white", margin=dict(t=40, r=1, l=1))
 
-        tab1.plotly_chart(fig, width='stretch')
+        st.plotly_chart(fig, width='stretch')
 
-        measurement_add_col1, measurement_add_col2 = tab1.columns([2, 1])
+        measurement_add_col1, measurement_add_col2 = st.columns([2, 1])
         measurement_add_col1.text_input("Time series name:", placeholder=f"Enter time series name. Defaults to adding '{chosen_measurement.name} processed'.", key="measurement_add_name")
         measurement_add_col2.button(label='Add to selectable timeseries', key="measurement_add_button")
 
