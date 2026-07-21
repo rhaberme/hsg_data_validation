@@ -1,1 +1,2 @@
 data (data_pioneer_anom.csv & data_sandy_anom.csv) is extracted from R package ODDWATER (https://github.com/pridiltal/oddwater) which is licenced under GNU General Public License v3.0 or later
+For further information see publication Talagala et al., 2019: A Feature-Based Procedure for Detecting Technical Outliers in Water-Quality Data From In Situ Sensors ( https://doi.org/10.1029/2019WR024906)
