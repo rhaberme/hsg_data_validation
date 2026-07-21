@@ -60,6 +60,10 @@ st.markdown("""
     font-size:16px;
     color: green;
 }
+/* Hide Streamlit's "Press Enter to apply" hint below text/number inputs */
+[data-testid="InputInstructions"] {
+    display: none;
+}
 </style>
 """, unsafe_allow_html=True)
 
