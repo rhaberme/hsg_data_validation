@@ -15,6 +15,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import pandas as pd
+from pandas.core.interchange.dataframe_protocol import DataFrame
+
 import data_processing as d_p
 import data_filling as d_f
 from typing import Union
@@ -33,14 +35,11 @@ class Measurement:
                  accepted_status: Union[str, int, None] = None,
                  validated_df: pd.DataFrame = None,
                  sep: Union[str, None] = ",",
-                 measurement_number=None,
                  drop_duplicates=False,
                  sampling_freq=None,
                  resample=True,
                  fill_resampling=None,
-                 are_outliers=None,
-                 treshold_value=None,
-                 hysteresis=None
+                 outlier_labels: pd.DataFrame = None
                  ):
         self.filepath = filepath
 
@@ -71,10 +70,7 @@ class Measurement:
         self.label_date_time = label_date_time
         self.label_status = label_status
         self.sep = sep
-        self.measurement_number = measurement_number
-        self.are_outliers = are_outliers
-        self.treshold_value = treshold_value
-        self.hysteresis = hysteresis
+        self.outlier_labels = outlier_labels
 
     def __str__(self):
         return self.name

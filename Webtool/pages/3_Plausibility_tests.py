@@ -9,9 +9,23 @@ import data_plau as dplau
 import data_processing as d_p
 import data_filling as d_f
 from Measurement import Measurement
-from sympy.codegen.cfunctions import isnan
 
-# Todo: add anomalie classes
+# http://hclwizard.org:3000/hclwizard/
+# can be updated if there are better ideas
+anomaly_print_dict = {
+    "ABC" : {"name": "Range (ABC)", "color": "#DB9D85"},
+#            "B": "#E093C3",
+#            "C": "#ACA4E2",
+    "DK" : {"name": "Gap (DK)", "color": "#4CB9CC"},
+#            "K": "#4CB9CC"
+    "E" : {"name": "Constancy (E)", "color": "#5CBD92"},
+    "F" : {"name": "Outliers (F)", "color": "#ABB065"},
+    "G" : {"name": "Gradient (G)", "color": "#DB9D85"},
+    "H" : {"name": "Noise (H)", "color": "#89D9CF"},
+    "I" : {"name": "Drift (I)", "color": "#AC7F21"},
+    "J" : {"name": "Jump (J)", "color": "#533600"},
+    "L" : {"name": "Manual (L)", "color": "#E093C3"}
+}
 
 register_plotly_resampler(mode="auto", default_n_shown_samples=50000)
 
@@ -45,6 +59,10 @@ st.markdown("""
 .normal-font-green {
     font-size:16px;
     color: green;
+}
+/* Hide Streamlit's "Press Enter to apply" hint below text/number inputs */
+[data-testid="InputInstructions"] {
+    display: none;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -103,6 +121,13 @@ if chosen_measurement and show_measurement:
                       plot_bgcolor="white", margin=dict(t=40, r=0, l=0))
 
     st.plotly_chart(fig, width='stretch')
+
+if chosen_measurement and chosen_measurement.outlier_labels is not None:
+    reset_detections = st.button("Reset current anomaly detections")
+
+    if reset_detections:
+        chosen_measurement.validated_df = None
+        chosen_measurement.outlier_labels = None
 
 tab1, tab2 = st.tabs(["Automatic Check", "Manual Check"])
 col1, col2 = tab1.columns(2)
@@ -329,15 +354,17 @@ if do_plausibility_checks:
         df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="I")
         df_raw = d_p.drop_implausible_measurements(df_raw, df_valid, inplausible_column_name="J")
 
+        has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
+        df_filled = chosen_measurement.validated_df.copy() if has_validated else (
+            chosen_measurement.return_df_as_datetime(raw=True).copy())
+        df_filled.loc[df_raw["value"].isna().values] = np.nan
         if fill_gaps and "selected_fill_method" in st.session_state.keys():
-            df_filled = d_f.data_filling_fun_dict[selected_fill_method](df_raw) if selected_fill_method else df_raw
-        else:
-            df_filled = df_raw.copy()
+            df_filled = d_f.data_filling_fun_dict[selected_fill_method](df_filled) if selected_fill_method else df_filled
 
         df_filled = d_p.df_to_datetime(df_filled)
 
         df_validated = df_filled.copy()
-        st.session_state["changed_df"] = df_validated
+        chosen_measurement.validated_df = df_validated.copy()
 
         indices_of_nan = pd.isnull(df_raw).any(axis=1).to_numpy().nonzero()[0]
 
@@ -377,6 +404,8 @@ if do_plausibility_checks:
             changed_df_with_deleted_and_new.drop(["status"], axis=1, inplace=True)
 
         changed_df_with_deleted_and_new = d_p.df_to_datetime(changed_df_with_deleted_and_new)
+        if chosen_measurement.outlier_labels is not None:
+            changed_df_with_deleted_and_new = changed_df_with_deleted_and_new.join(chosen_measurement.outlier_labels)
         if check_range:
             changed_df_with_deleted_and_new["ABC"] = df_ABC.value
         if check_gap:
@@ -393,37 +422,20 @@ if do_plausibility_checks:
             changed_df_with_deleted_and_new["I"] = df_I.value
         if check_jump:
             changed_df_with_deleted_and_new["J"] = df_J.value
-        chosen_measurement.changed_df_with_deleted_and_new = changed_df_with_deleted_and_new
+        chosen_measurement.outlier_labels = changed_df_with_deleted_and_new.drop("value", axis=1)
         if hasattr(chosen_measurement, "days_changed_dict"):
             del chosen_measurement.__dict__["days_changed_dict"]
         st.session_state["validation_check_iteration_nr"] = 0
-        chosen_measurement.validated_df = st.session_state["changed_df"]
 
         tab1.success(f'The validated data was added to the time series '
                      f'{chosen_measurement.name}.')
-
-        # http://hclwizard.org:3000/hclwizard/
-        # can be updated if there are better ideas
-        anomaly_print_dict = {
-            "ABC" : {"name": "Range (ABC)", "color": "#DB9D85"},
-#            "B": "#E093C3",
-#            "C": "#ACA4E2",
-            "DK" : {"name": "Gap (DK)", "color": "#4CB9CC"},
-#            "K": "#4CB9CC"
-            "E" : {"name": "Constancy (E)", "color": "#5CBD92"},
-            "F" : {"name": "Outliers (F)", "color": "#ABB065"},
-            "G" : {"name": "Gradient (G)", "color": "#DB9D85"},
-            "H" : {"name": "Noise (H)", "color": "#89D9CF"},
-            "I" : {"name": "Drift (I)", "color": "#AC7F21"},
-            "J" : {"name": "Jump (J)", "color": "#533600"},
-        }
 
         pd.options.plotting.backend = "plotly"
         fig = go.Figure()
         fig = fig.add_trace(go.Scatter(
             x = changed_df_with_deleted_and_new.index,
             y=changed_df_with_deleted_and_new['value'],
-            name=f"Validated time series {chosen_measurement.name}"
+            name=f"Validated TS"
         ))
         for name, values in changed_df_with_deleted_and_new.items():
             if name == "value":
@@ -481,8 +493,152 @@ if chosen_measurement:
 
     st.table(stats)
 
+tab2.markdown("### Manual Check")
+tab2.write(
+    "Use selection to mark not plausible data points")
 
-tab2.markdown('<p class="small-font-red">Manual data verification is still under development!</p>',
-              unsafe_allow_html=True)
+if chosen_measurement:
+    register_plotly_resampler(mode="auto", default_n_shown_samples=10000)
+    has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
 
+    df_raw = chosen_measurement.return_df_as_datetime(raw=True).copy()
+    df_manual = chosen_measurement.validated_df.copy() if has_validated else df_raw.copy()
 
+    fig_context = go.Figure()
+
+    fig_context.add_trace(go.Scattergl(
+        x=df_manual.index,
+        y=df_manual['value'],
+        mode='lines+markers',
+        name="Overview",
+        line=dict(color='#000000'),
+        marker=dict(size=2, color='#000000')
+    ))
+
+    if has_validated:
+        mask_diff = (df_raw['value'] != df_manual['value']) & df_raw['value'].notna()
+        df_removed = df_raw[mask_diff]
+
+        if not df_removed.empty:
+            fig_context.add_trace(go.Scattergl(
+                x=df_removed.index,
+                y=df_removed['value'],
+                mode='markers',
+                name="Removed/Flagged",
+                marker=dict(size=4, color='red')
+            ))
+
+    fig_context.update_layout(
+        dragmode='select',
+        selectdirection='h',
+        showlegend=False,
+        height=100,
+        xaxis_title="",
+        yaxis_title="",
+        plot_bgcolor="white",
+        margin=dict(t=20, r=1, l=1, b=20)
+    )
+
+    context_event = tab2.plotly_chart(
+        fig_context,
+        on_select="rerun",
+        key="context_selection",
+        width='stretch'
+    )
+
+    selected_context_points = context_event.selection.get("points", [])
+    if selected_context_points:
+        timestamps = [p["x"] for p in selected_context_points]
+        t_min = pd.to_datetime(min(timestamps))
+        t_max = pd.to_datetime(max(timestamps))
+        df_detail = df_manual.loc[t_min:t_max]
+
+        if len(df_detail) > 50000:
+            tab2.error(
+                f"Range is too big! The selected range contains {len(df_detail)} data points.")
+
+        else:
+            unregister_plotly_resampler()
+            tab2.markdown(
+                f"**Chosen Range:** {t_min.strftime('%Y-%m-%d %H:%M')} bis {t_max.strftime('%Y-%m-%d %H:%M')}")
+            unregister_plotly_resampler()
+
+            fig_detail = go.Figure()
+            fig_detail.add_trace(go.Scattergl(
+                x=df_detail.index,
+                y=df_detail['value'],
+                mode='lines+markers',
+                name="Validated TS",
+                marker=dict(size=4, color='#1f77b4'),
+                selected=dict(marker=dict(color='red', size=6)),
+                unselected=dict(marker=dict(opacity=0.3))
+            ))
+
+            if hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None:
+                for outl in chosen_measurement.outlier_labels.columns:
+                    detail_outlier_pts = chosen_measurement.outlier_labels[outl][t_min:t_max]
+                    fig_detail = fig_detail.add_trace(go.Scattergl(
+                        x=detail_outlier_pts.index,
+                        y=detail_outlier_pts.values,
+                        name=anomaly_print_dict[outl]['name'],
+                        mode="markers",
+                        marker=dict(color=anomaly_print_dict[outl]['color'], ),
+                    ))
+
+            fig_detail.update_layout(
+                dragmode='select',
+                showlegend=True,
+                height=500,
+                xaxis_title="Select Points",
+                yaxis_title=chosen_measurement.label_value,
+                plot_bgcolor="white",
+                margin=dict(t=20, r=1, l=1)
+            )
+
+            detail_event = tab2.plotly_chart(
+                fig_detail,
+                on_select="rerun",
+                selection_mode=('box', 'lasso', 'points'),
+                key="detail_selection",
+                width='stretch'
+            )
+
+            selected_detail_points = detail_event.selection.get("points", [])
+
+            manual_label = "L"
+            if selected_detail_points:
+                tab2.info(f"{len(selected_detail_points)} selected.")
+                mark = tab2.button("Mark as Anomalies")
+                unmark = tab2.button("Unmark Anomalies")
+                if mark:
+                    if chosen_measurement.outlier_labels is None:
+                        chosen_measurement.outlier_labels = pd.DataFrame().reindex_like(
+                            chosen_measurement.return_df_as_datetime(raw=True))
+                        chosen_measurement.outlier_labels.rename(columns={"value": manual_label}, inplace=True)
+                    if manual_label not in chosen_measurement.outlier_labels.columns:
+                        chosen_measurement.outlier_labels[manual_label] = np.nan
+                    selected_idx = [pt['x'] for pt in selected_detail_points]
+                    selected_val = [pt['y'] for pt in selected_detail_points]
+                    chosen_measurement.outlier_labels.loc[selected_idx, 'L'] = selected_val
+                    has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
+                    chosen_measurement.validated_df = chosen_measurement.validated_df.copy() if has_validated else (
+                        chosen_measurement.return_df_as_datetime(raw=True).copy())
+                    chosen_measurement.validated_df[chosen_measurement.outlier_labels['L'].notna()] = np.nan
+                    st.session_state["changed_df"] = chosen_measurement
+                    st.rerun()
+
+                if unmark:
+                    if chosen_measurement.outlier_labels is None:
+                        st.rerun()
+                    selected_idx = [pt['x'] for pt in selected_detail_points]
+                    selected_val = [pt['y'] for pt in selected_detail_points]
+                    chosen_measurement.outlier_labels.loc[selected_idx] = np.nan
+                    has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
+                    chosen_measurement.validated_df = chosen_measurement.validated_df.copy() if has_validated else (
+                        chosen_measurement.return_df_as_datetime(raw=True).copy())
+                    chosen_measurement.validated_df.loc[selected_idx, "value"] = selected_val
+                    st.session_state["changed_df"] = chosen_measurement
+                    st.rerun()
+
+    else:
+        tab2.info("Choose range in the upper plot")
