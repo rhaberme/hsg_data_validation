@@ -39,6 +39,19 @@ st.markdown("""
     font-size:16px;
     color: green;
 }
+
+.st-key-continue_to_plausibility button {
+    background-color: #2e7d32 !important;
+    border-color: #2e7d32 !important;
+    color: #ffffff !important;
+}
+.st-key-continue_to_plausibility button:hover,
+.st-key-continue_to_plausibility button:focus,
+.st-key-continue_to_plausibility button:active {
+    background-color: #1b5e20 !important;
+    border-color: #1b5e20 !important;
+    color: #ffffff !important;
+}
 </style>""", unsafe_allow_html=True)
 
 # Main area content
@@ -155,3 +168,7 @@ if measurement_submit_button:
                                            accepted_status=accepted_status, sep=sep, drop_duplicates=True)
         st.session_state["measurement_dict"][measurement_instance.name] = measurement_instance
     st.success(f'The time series {name} has been successfully added.')
+
+if st.session_state["measurement_dict"]:
+    if st.button("Continue to Plausibility Tests", type="primary", key="continue_to_plausibility"):
+        st.switch_page("pages/3_Plausibility_tests.py")
