@@ -1,0 +1,1 @@
+data (data_pioneer_anom.csv & data_sandy_anom.csv) is extracted from R package ODDWATER (https://github.com/pridiltal/oddwater) which is licenced under GNU General Public License v3.0 or later
