@@ -58,12 +58,9 @@ def detect_separator(filepath: str, candidates: list = None):
 def create_df_data_from_csv(filepath: str,
                             date_time_col_name_s: list,
                             value_col_name: str,
-                            ambiguous: bool = False,
                             status_available: bool = False,
-                            status_col_name: str = None,
+                            status_col_name: str | None = None,
                             sep: str = ","):
-    # TODO: Check for values to be numeric -> Include preprocessing to convert non-numeric to NaN
-    # Do in separate function and call here
     # Times: Accept whatever pd.to_datetime accepts
     if len(date_time_col_name_s) == 2:
         df_data = pd.read_csv(filepath, sep=sep)
@@ -88,6 +85,9 @@ def create_df_data_from_csv(filepath: str,
         return (date - pd.Timestamp("1970-01-01", tz="UTC")) // pd.Timedelta('1s')
 
     df_data.index = pd.Series(df_data.index).apply(date_to_unix)
+
+    # drop nonnumeric data
+    df_data[value_col_name] = pd.to_numeric(df_data[value_col_name], errors='coerce')
 
     if not status_available:
         df_data = df_data[[value_col_name]]

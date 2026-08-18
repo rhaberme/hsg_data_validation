@@ -146,7 +146,6 @@ if st.session_state["measurement_uploader"] and label_date_time is not None:
     try:
         raw_df = d_p.create_df_data_from_csv(filepath, date_time_col_name_s=label_date_time,
                                              value_col_name=label_value,
-                                             ambiguous=False,
                                              status_available=status_available,
                                              sep=sep
                                              )

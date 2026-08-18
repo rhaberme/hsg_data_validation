@@ -484,11 +484,13 @@ if do_plausibility_checks:
         )
 
 if chosen_measurement:
-    stats = chosen_measurement.return_df_as_datetime(raw=True)["value"].describe()
+    with np.errstate(invalid="ignore"): # Do not warn if inf
+        stats = chosen_measurement.return_df_as_datetime(raw=True)["value"].describe()
     stats.name = chosen_measurement_name
 
     if do_plausibility_checks:
-        stats_plaus = changed_df_with_deleted_and_new['value'].describe()
+        with np.errstate(invalid="ignore"): # do not warn if inf
+            stats_plaus = changed_df_with_deleted_and_new['value'].describe()
         stats_plaus.name = "Processed"
         stats = pd.concat([stats, stats_plaus], axis=1)
 
