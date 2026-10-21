@@ -45,6 +45,7 @@ Please select it in the **table of contents** on the left.
 1. **Upload your time series data.**
 2. **Select the data from the table of contents.**
 3. **Perform the plausibility test.**
+4. **Export publication-ready figures and statistics** on the page *Scientific plots*.
 
 If you have any questions, feel free to reach out for help!
 """)
