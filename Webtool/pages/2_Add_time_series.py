@@ -69,14 +69,17 @@ lon = None
 
 name = st.text_input("Time series name:", placeholder="Enter time series name. Defaults to filename and column.")
 
-from_file_exp = st.expander("Load time series from file", expanded=True)
-
 # Data source selection: Upload file or Sample file
-data_source = from_file_exp.radio(
+data_source = st.radio(
     "Data source",
     options=["Upload file", "Use sample file"],
     horizontal=True
 )
+
+if data_source == "Upload file":
+    from_file_exp = st.expander("Load time series from file", expanded=False)
+else:
+    from_file_exp = st.expander("Load sample time series", expanded=False)
 
 status_available = from_file_exp.checkbox("Status available?")
 datetime_in_two_col = from_file_exp.checkbox("Date and time provided in seperate columns?",
@@ -89,7 +92,7 @@ if data_source == "Upload file":
 else:
     # Sample file selection
     sample_files_dir = pathlib.Path(__file__).parent.resolve().parent.parent / "sample_data"
-    sample_files = [f for f in os.listdir(sample_files_dir) if f.endswith(('.csv', '.txt', '.ftr'))] if os.path.exists(sample_files_dir) else []
+    sample_files = [f for f in os.listdir(sample_files_dir) if f.endswith(('.csv', '.txt', '.ftr')) and not f.lower().startswith("license")] if os.path.exists(sample_files_dir) else []
     
     if sample_files:
         selected_sample = from_file_exp.selectbox("Select sample file", sample_files)
