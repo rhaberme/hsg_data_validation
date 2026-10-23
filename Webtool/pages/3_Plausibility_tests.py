@@ -249,14 +249,14 @@ if check_jump:
                                                                           value=2.0, step=1.0)
 
 
-st.write("Plausibility Tests:")
-fill_gaps = st.checkbox('Filling data gaps?')
+tab1.write("Plausibility Tests:")
+fill_gaps = tab1.checkbox('Filling data gaps?')
 if fill_gaps:
-    selected_fill_method = st.selectbox("Select method for filling data gaps", ["Interpolation", "Regression",
+    selected_fill_method = tab1.selectbox("Select method for filling data gaps", ["Interpolation", "Regression",
                                                                                       "Null", "Average",
                                                                                       "Moving average"],
                                           key="selected_fill_method")
-do_plausibility_checks = st.button("Start plausibility tests")
+do_plausibility_checks = tab1.button("Start plausibility tests")
 
 
 if do_plausibility_checks:
@@ -608,9 +608,10 @@ if chosen_measurement:
 
             selected_detail_points = detail_event.selection.get("points", [])
 
-            manual_label = "L"
             if selected_detail_points:
                 tab2.info(f"{len(selected_detail_points)} selected.")
+                manual_label = tab2.selectbox("Mark as:", [anomaly_print_dict[key]['name'] for key in anomaly_print_dict.keys()], index=len(anomaly_print_dict)-1)
+                manual_label, = [key for key in anomaly_print_dict.keys() if anomaly_print_dict[key]['name'] == manual_label]
                 mark = tab2.button("Mark as Anomalies")
                 unmark = tab2.button("Unmark Anomalies")
                 if mark:
@@ -622,11 +623,11 @@ if chosen_measurement:
                         chosen_measurement.outlier_labels[manual_label] = np.nan
                     selected_idx = [pt['x'] for pt in selected_detail_points]
                     selected_val = [pt['y'] for pt in selected_detail_points]
-                    chosen_measurement.outlier_labels.loc[selected_idx, 'L'] = selected_val
+                    chosen_measurement.outlier_labels.loc[selected_idx, manual_label] = selected_val
                     has_validated = hasattr(chosen_measurement, "validated_df") and chosen_measurement.validated_df is not None
                     chosen_measurement.validated_df = chosen_measurement.validated_df.copy() if has_validated else (
                         chosen_measurement.return_df_as_datetime(raw=True).copy())
-                    chosen_measurement.validated_df[chosen_measurement.outlier_labels['L'].notna()] = np.nan
+                    chosen_measurement.validated_df[chosen_measurement.outlier_labels[manual_label].notna()] = np.nan
                     st.session_state["changed_df"] = chosen_measurement
                     st.rerun()
 

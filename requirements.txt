@@ -1,6 +1,6 @@
 # TODO resolve environment specs
 
-pandas
+pandas>=3.0.0
 streamlit>=1.59
 numpy
 measurement
