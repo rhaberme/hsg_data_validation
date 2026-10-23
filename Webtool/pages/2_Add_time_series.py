@@ -1,10 +1,13 @@
 from Measurement import Measurement
+from streamlit.typing import UploadedFile
 import help_functions as s_f
 import data_processing as d_p
 import data_filling as d_f
 import pandas as pd
 import streamlit as st
 import pathlib
+import io
+import os
 
 st.set_page_config(
     page_title="HSG Sim Datatool",
@@ -39,6 +42,19 @@ st.markdown("""
     font-size:16px;
     color: green;
 }
+
+.st-key-continue_to_plausibility button {
+    background-color: #2e7d32 !important;
+    border-color: #2e7d32 !important;
+    color: #ffffff !important;
+}
+.st-key-continue_to_plausibility button:hover,
+.st-key-continue_to_plausibility button:focus,
+.st-key-continue_to_plausibility button:active {
+    background-color: #1b5e20 !important;
+    border-color: #1b5e20 !important;
+    color: #ffffff !important;
+}
 </style>""", unsafe_allow_html=True)
 
 # Main area content
@@ -53,19 +69,68 @@ lon = None
 
 name = st.text_input("Time series name:", placeholder="Enter time series name. Defaults to filename and column.")
 
-from_file_exp = st.expander("Load time series from file", expanded=True)
+# Data source selection: Upload file or Sample file
+data_source = st.radio(
+    "Data source",
+    options=["Upload file", "Use sample file"],
+    horizontal=True
+)
 
-
+if data_source == "Upload file":
+    from_file_exp = st.expander("Load time series from file", expanded=False)
+else:
+    from_file_exp = st.expander("Load sample time series", expanded=False)
 
 status_available = from_file_exp.checkbox("Status available?")
 datetime_in_two_col = from_file_exp.checkbox("Date and time provided in seperate columns?",
                                              value=False)
 
+# File loading based on source selection
+if data_source == "Upload file":
+    st.session_state["measurement_uploader"] = from_file_exp.file_uploader('Load file', type=['ftr', 'csv', 'txt'])
 
-# with st.form(key='add_measurement_form'):
-st.session_state["measurement_uploader"] = from_file_exp.file_uploader('Load file', type=['ftr', 'csv', 'txt'])
+else:
+    # Sample file selection
+    sample_files_dir = pathlib.Path(__file__).parent.resolve().parent.parent / "sample_data"
+    sample_files = [f for f in os.listdir(sample_files_dir) if f.endswith(('.csv', '.txt', '.ftr')) and not f.lower().startswith("license")] if os.path.exists(sample_files_dir) else []
+    
+    if sample_files:
+        selected_sample = from_file_exp.selectbox("Select sample file", sample_files)
+        filepath = str(sample_files_dir / selected_sample)
+        
+        with open(filepath, 'rb') as f:
+            file_buffer = io.BytesIO(f.read())
+        file_buffer.name = selected_sample
+        file_buffer.size = file_buffer.getbuffer().nbytes
+        st.session_state["measurement_uploader"] = file_buffer
+    else:
+        from_file_exp.warning("No sample files found in \"sample_data/\" directory.")
+        st.session_state["measurement_uploader"] = None
+
+# Column names detection (shared for both sources)
 if "column_names" not in st.session_state.keys():
     st.session_state["column_names"] = []
+
+CUSTOM_SEPARATOR = "__custom__"
+separator_options = {
+    "Auto-detect": None,
+    "Comma  ,": ",",
+    "Semicolon  ;": ";",
+    "Tab  \\t": "\t",
+    "Space": " ",
+    "Custom...": CUSTOM_SEPARATOR,
+}
+separator_choice = from_file_exp.selectbox("Separator", separator_options, index=0)
+selected_separator = separator_options[separator_choice]
+
+if selected_separator == CUSTOM_SEPARATOR:
+    selected_separator = from_file_exp.text_input(
+        "Custom separator", max_chars=8,
+        help="Entered literally, so a single character like | is what you want here. "
+             "Use the Tab option above for tab separated files.")
+    if selected_separator == "":
+        from_file_exp.info("No custom separator entered yet - detecting it automatically.")
+        selected_separator = None
 
 if st.session_state["measurement_uploader"]:
     current_directory = str(pathlib.Path(__file__).parent.resolve()).rstrip("pages")
@@ -75,19 +140,17 @@ if st.session_state["measurement_uploader"]:
                            )
     filepath = current_directory + "tempDir/" + st.session_state[
         "measurement_uploader"].name
-    column_names = None
-    for sep_ in [",", ";", " "]:
-        current_column_names = pd.read_csv(filepath, on_bad_lines='skip', sep=sep_).columns
-        if column_names is not None:
-            if len(current_column_names) > len(column_names):
-                column_names = current_column_names
-                sep = sep_
+    sep = d_p.detect_separator(filepath) if selected_separator is None else selected_separator
 
-        else:
-            column_names = current_column_names
-            sep = sep_
+    try:
+        st.session_state["column_names"] = pd.read_csv(filepath, on_bad_lines='skip', sep=sep).columns
+    except (ValueError, pd.errors.ParserError) as parse_error:
+        st.session_state["column_names"] = []
+        st.error(f"Could not read the file with separator {sep!r}: {parse_error}")
 
-    st.session_state["column_names"] = column_names
+    if len(st.session_state["column_names"]) == 1:
+        st.warning(f"Separator {sep!r} splits the file into a single column. "
+                   "If that is not intended, pick a different separator above.")
 
 
 label_value = from_file_exp.selectbox("Name of the measurement-column", st.session_state["column_names"],
@@ -114,7 +177,6 @@ if st.session_state["measurement_uploader"] and label_date_time is not None:
     try:
         raw_df = d_p.create_df_data_from_csv(filepath, date_time_col_name_s=label_date_time,
                                              value_col_name=label_value,
-                                             ambiguous=False,
                                              status_available=status_available,
                                              sep=sep
                                              )
@@ -155,3 +217,7 @@ if measurement_submit_button:
                                            accepted_status=accepted_status, sep=sep, drop_duplicates=True)
         st.session_state["measurement_dict"][measurement_instance.name] = measurement_instance
     st.success(f'The time series {name} has been successfully added.')
+
+if st.session_state["measurement_dict"]:
+    if st.button("Continue to Plausibility Tests", type="primary", key="continue_to_plausibility"):
+        st.switch_page("pages/3_Plausibility_tests.py")

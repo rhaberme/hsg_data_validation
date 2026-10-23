@@ -1,14 +1,14 @@
 # TODO resolve environment specs
 
 pandas
-streamlit>=1.52
+streamlit>=1.59
 numpy
 measurement
-certifi~=2024.7.4
+certifi~=2026.10.23
 scipy~=1.12
-pyarrow
-pytz~=2024.1
+pyarrow~=26.0.0
+pytz~=2026.5
 matplotlib~=3.8
 seaborn~=0.13.2
-plotly~=5.23.0
+plotly~=7.1.0
 plotly-resampler

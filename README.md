@@ -29,5 +29,5 @@ https://hsgdatatool.streamlit.app/
 1. Open the console and navigate to the GitLab Repository to your PC
 2. Run the webapp using `streamlit run Webtool/Start.py`
 - If this doesn't work use `python -m streamlit run Webtool/Start.py`
-- Please note that the Streamlit version must be 1.52 or higher (To update, run the command: `pip install --upgrade streamlit`)
+- Please note that the Streamlit version must be 1.59 or higher (To update, run the command: `pip install --upgrade streamlit`)
 3. A browser tab with the webapp should open automatically 
