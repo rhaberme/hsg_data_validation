@@ -31,3 +31,11 @@ https://hsgdatatool.streamlit.app/
 - If this doesn't work use `python -m streamlit run Webtool/Start.py`
 - Please note that the Streamlit version must be 1.59 or higher (To update, run the command: `pip install --upgrade streamlit`)
 3. A browser tab with the webapp should open automatically 
+
+### Bundling the webapp
+
+Bundling is possible using pyinstaller. 
+However, needs to be done on all platforms separately.
+Use the following command to build the bundle:
+pyinstaller --onefile -n "hsg_data_tool" --hidden-import=plotly
+_resampler --hidden-import=matplotlib --hidden-import=matplotlib.backends.backend_pdf  --hidden-import=scipy.signal --additional-hooks-dir=./hooks --workpath ./dist --distpath "../" --add-data "./Webtool:./Webtool" --add-data "./sample_data:./sample_data" launch.py --clean
