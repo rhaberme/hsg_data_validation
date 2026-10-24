@@ -43,12 +43,16 @@ class Measurement:
                  ):
         self.filepath = filepath
 
-        self.raw_df = d_p.create_df_data_from_csv(filepath, date_time_col_name_s=label_date_time,
-                                                  value_col_name=label_value,
-                                                  status_available=status_available,
-                                                  status_col_name=label_status,
-                                                  sep=sep
-                                                  )
+        self.raw_df, self.nonselected_df, self.selected_loc = d_p.create_df_data_from_csv(
+            filepath,
+            date_time_col_name_s=label_date_time,
+            value_col_name=label_value,
+            status_available=status_available,
+            status_col_name=label_status,
+            sep=sep,
+            load_all=True
+        )
+
         if status_available:
             self.raw_df = d_p.replace_status_informations_with_binary(self.raw_df, allowed_status=accepted_status)
         self.status_available = status_available

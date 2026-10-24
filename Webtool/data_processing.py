@@ -60,7 +60,8 @@ def create_df_data_from_csv(filepath: str,
                             value_col_name: str,
                             status_available: bool = False,
                             status_col_name: str | None = None,
-                            sep: str = ","):
+                            sep: str = ",",
+                            load_all: bool = False):
     # Times: Accept whatever pd.to_datetime accepts
     if len(date_time_col_name_s) == 2:
         df_data = pd.read_csv(filepath, sep=sep)
@@ -90,14 +91,25 @@ def create_df_data_from_csv(filepath: str,
     df_data[value_col_name] = pd.to_numeric(df_data[value_col_name], errors='coerce')
 
     if not status_available:
+        if load_all:
+            selected_loc = df_data.columns.get_loc(value_col_name)
+            df_others = df_data.drop([value_col_name], axis=1)
+
         df_data = df_data[[value_col_name]]
         df_data = df_data.rename(columns={value_col_name: "value"})
 
     else:
+        if load_all:
+            selected_loc = df_data.columns.get_loc(value_col_name)
+            df_others = df_data.drop([value_col_name, status_col_name], axis=1)
+
         df_data = df_data[[value_col_name, status_col_name]]
         df_data = df_data.rename(columns={value_col_name: "value", status_col_name: "status"})
 
-    return df_data
+    if load_all:
+        return df_data, df_others, selected_loc
+    else:
+        return df_data
 
 def drop_implausible_measurements(df_values, df_inplausible, inplausible_column_name):
     df_dropped = df_values.copy()

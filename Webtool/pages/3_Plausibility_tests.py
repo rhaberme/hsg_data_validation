@@ -402,7 +402,7 @@ if do_plausibility_checks:
         st.write("Time series after validation:")
         changed_df_with_deleted_and_new = df_filled.copy()
         if "status" in changed_df_with_deleted_and_new:
-            changed_df_with_deleted_and_new.drop(["status"], axis=1, inplace=True)
+            changed_df_with_deleted_and_new = changed_df_with_deleted_and_new.drop(["status"], axis=1)
 
         changed_df_with_deleted_and_new = d_p.df_to_datetime(changed_df_with_deleted_and_new)
         if chosen_measurement.outlier_labels is not None:
@@ -472,6 +472,12 @@ if do_plausibility_checks:
             if name == "value":
                 continue
             df_download[anomaly_print_dict[name]['name']] = values.map(lambda x: not pd.isna(x))
+
+        df_download = df_download.rename(columns=dict(zip(df_download.columns, [measurement_updated.label_value + "_" + col for col in df_download.columns])))
+        df_download = df_download.rename(columns={measurement_updated.label_value + "_" + "value": measurement_updated.label_value})
+        df_nonselect = d_p.df_to_datetime(measurement_updated.nonselected_df)
+        df_download = pd.concat([df_nonselect.iloc[:, 0:measurement_updated.selected_loc], df_download, df_nonselect.iloc[:, measurement_updated.selected_loc:]], axis=1, sort=True)
+        print(df_download)
 
         csv = convert_for_download(df_download)
 

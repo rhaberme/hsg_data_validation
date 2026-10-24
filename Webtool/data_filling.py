@@ -18,7 +18,7 @@ import pandas as pd
 
 def fill_nan_interp(df_data, value_col_name="value"):
     df_data_copy = df_data.copy()
-    df_data_copy[value_col_name].interpolate(inplace=True)
+    df_data_copy[value_col_name] = df_data_copy[value_col_name].interpolate()
     return df_data_copy
 
 
