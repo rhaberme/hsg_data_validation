@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from plotly_resampler import register_plotly_resampler, unregister_plotly_resampler
 
 import data_plau as dplau
@@ -105,7 +106,21 @@ try:
     if "measurement_dict" in st.session_state:
         chosen_measurement_name = col5.selectbox("Choose time series", st.session_state["measurement_dict"])
         chosen_measurement = st.session_state["measurement_dict"][chosen_measurement_name]
+
+        plot_opts = [*st.session_state["measurement_dict"].keys()]
+        plot_opts.remove(chosen_measurement_name)
+        plot_opts.extend(chosen_measurement.nonselected_df.columns.tolist())
+        if len(plot_opts) != 0:
+            plot_others = st.multiselect("Additional timeseries to show:", plot_opts,
+                                      default=[])
+            plot_measurements = [sel for sel in plot_others if sel in st.session_state["measurement_dict"].keys()]
+            plot_nonselected = [sel for sel in plot_others if sel not in plot_measurements]
+        else:
+            plot_measurements = []
+            plot_nonselected = []
         show_measurement = st.checkbox("Show time series?")
+        if len(plot_nonselected)  + len(plot_measurements) != 0:
+            show_correlation = st.checkbox("Show correlation plots?")
     else:
         st.session_state["measurement_dict"] = {}
         chosen_measurement = None
@@ -114,12 +129,65 @@ except KeyError:
     st.error("No time series selected")
 
 if chosen_measurement and show_measurement:
-    pd.options.plotting.backend = "plotly"
-    fig = chosen_measurement.return_df_as_datetime(raw=True)["value"].plot(title="", template="simple_white")
+    sel_plotdata = chosen_measurement.return_df_as_datetime(raw=True)
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(go.Scatter(
+        x=sel_plotdata.index,
+        y=sel_plotdata['value'],
+        name="Selected (" + chosen_measurement_name + ")",
+    ))
 
-    fig.update_layout(showlegend=False, xaxis_title="", yaxis_title=chosen_measurement.label_value,
+    for key in plot_others:
+        if key in plot_measurements:
+            meas = st.session_state["measurement_dict"][key].return_df_as_datetime(raw=True)["value"]
+            fig = fig.add_trace(go.Scatter(
+                x=meas.index,
+                y=meas,
+                name=key,
+            ),
+                secondary_y=True,
+            )
+        elif key in plot_nonselected:
+            fig = fig.add_trace(go.Scatter(
+                x=chosen_measurement.nonselected_df.index.map(d_p.unixtime_to_dt64),
+                y=chosen_measurement.nonselected_df[key],
+                name=key,
+            ),
+                secondary_y=True,
+            )
+
+    fig.update_layout(showlegend=len(plot_measurements)+len(plot_nonselected) != 0, title="", xaxis_title="", yaxis_title=chosen_measurement.label_value,
                       plot_bgcolor="white", margin=dict(t=40, r=0, l=0))
+    st.plotly_chart(fig, width='stretch')
 
+if chosen_measurement and len(plot_nonselected)  + len(plot_measurements) != 0 and show_correlation:
+    fig = make_subplots(rows=len(plot_nonselected)+len(plot_measurements), cols=1)
+    row = 1
+    for key in plot_others:
+        if key in plot_measurements:
+            pd_con = pd.concat([st.session_state["measurement_dict"][key].raw_df["value"], chosen_measurement.return_df_as_datetime(raw=True)["value"]], axis=1, sort=True)
+            fig = fig.add_trace(go.Scatter(
+                x=st.session_state["measurement_dict"][key].raw_df["value"],
+                y=chosen_measurement.raw_df["value"],
+                mode="markers",
+            ),
+                row=row,col=1
+            )
+        elif key in plot_nonselected:
+            pd_con = pd.concat([chosen_measurement.nonselected_df[key], chosen_measurement.return_df_as_datetime(raw=True)["value"]], axis=1, sort=True)
+            fig = fig.add_trace(go.Scatter(
+                x=pd_con[key],
+                y=pd_con["value"],
+                mode="markers",
+            ),
+                row=row,col=1
+            )
+        fig['layout']['xaxis{}'.format(row)]['title'] = key
+        fig['layout']['yaxis{}'.format(row)]['title'] = chosen_measurement.label_value
+        row += 1
+
+    fig.update_layout(showlegend=False, title="",
+                      plot_bgcolor="white", margin=dict(t=40, r=0, l=0))
     st.plotly_chart(fig, width='stretch')
 
 if chosen_measurement and chosen_measurement.outlier_labels is not None:
@@ -432,7 +500,7 @@ if do_plausibility_checks:
                      f'{chosen_measurement.name}.')
 
         pd.options.plotting.backend = "plotly"
-        fig = go.Figure()
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
         fig = fig.add_trace(go.Scatter(
             x = changed_df_with_deleted_and_new.index,
             y=changed_df_with_deleted_and_new['value'],
@@ -448,6 +516,26 @@ if do_plausibility_checks:
                 mode="markers",
                 marker=dict(color=anomaly_print_dict[name]['color'],),
             ))
+
+        for key in plot_others:
+            if key in plot_measurements:
+                meas = st.session_state["measurement_dict"][key].return_df_as_datetime(raw=True)["value"]
+                fig = fig.add_trace(go.Scatter(
+                    x=meas.index,
+                    y=meas,
+                    name=key,
+                ),
+                    secondary_y=True
+                )
+            elif key in plot_nonselected:
+                fig = fig.add_trace(go.Scatter(
+                    x=chosen_measurement.nonselected_df.index.map(d_p.unixtime_to_dt64),
+                    y=chosen_measurement.nonselected_df[key],
+                    name=key,
+                ),
+                    secondary_y=True,
+                )
+
         fig.update_layout(showlegend=True, xaxis_title="", yaxis_title=chosen_measurement.label_value,
                           plot_bgcolor="white", margin=dict(t=40, r=1, l=1))
 
@@ -477,7 +565,6 @@ if do_plausibility_checks:
         df_download = df_download.rename(columns={measurement_updated.label_value + "_" + "value": measurement_updated.label_value})
         df_nonselect = d_p.df_to_datetime(measurement_updated.nonselected_df)
         df_download = pd.concat([df_nonselect.iloc[:, 0:measurement_updated.selected_loc], df_download, df_nonselect.iloc[:, measurement_updated.selected_loc:]], axis=1, sort=True)
-        print(df_download)
 
         csv = convert_for_download(df_download)
 
@@ -572,7 +659,7 @@ if chosen_measurement:
                 f"**Chosen Range:** {t_min.strftime('%Y-%m-%d %H:%M')} bis {t_max.strftime('%Y-%m-%d %H:%M')}")
             unregister_plotly_resampler()
 
-            fig_detail = go.Figure()
+            fig_detail = make_subplots(specs=[[{"secondary_y": True}]])
             fig_detail.add_trace(go.Scattergl(
                 x=df_detail.index,
                 y=df_detail['value'],
@@ -593,6 +680,28 @@ if chosen_measurement:
                         mode="markers",
                         marker=dict(color=anomaly_print_dict[outl]['color'], ),
                     ))
+
+            for key in plot_others:
+                if key in plot_measurements:
+                    meas = st.session_state["measurement_dict"][key].return_df_as_datetime(raw=True)["value"][t_min:t_max]
+                    fig_detail = fig_detail.add_trace(go.Scatter(
+                        x=meas.index,
+                        y=meas,
+                        name=key,
+                    ),
+                        secondary_y=True,
+                    )
+                elif key in plot_nonselected:
+                    nonsel = chosen_measurement.nonselected_df
+                    nonsel.index = nonsel.index.map(d_p.unixtime_to_dt64)
+                    nonsel = nonsel[t_min:t_max]
+                    fig_detail = fig_detail.add_trace(go.Scatter(
+                        x=nonsel.index,
+                        y=nonsel[key],
+                        name=key,
+                    ),
+                        secondary_y=True,
+                    )
 
             fig_detail.update_layout(
                 dragmode='select',
@@ -624,7 +733,7 @@ if chosen_measurement:
                     if chosen_measurement.outlier_labels is None:
                         chosen_measurement.outlier_labels = pd.DataFrame().reindex_like(
                             chosen_measurement.return_df_as_datetime(raw=True))
-                        chosen_measurement.outlier_labels.rename(columns={"value": manual_label}, inplace=True)
+                        chosen_measurement.outlier_labels = chosen_measurement.outlier_labels.rename(columns={"value": manual_label})
                     if manual_label not in chosen_measurement.outlier_labels.columns:
                         chosen_measurement.outlier_labels[manual_label] = np.nan
                     selected_idx = [pt['x'] for pt in selected_detail_points]
