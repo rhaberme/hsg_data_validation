@@ -134,7 +134,7 @@ if chosen_measurement and show_measurement:
     fig.add_trace(go.Scatter(
         x=sel_plotdata.index,
         y=sel_plotdata['value'],
-        name="Selected (" + chosen_measurement_name + ")",
+        name="Selected TS",
     ))
 
     for key in plot_others:
@@ -551,8 +551,8 @@ if do_plausibility_checks:
         st.session_state["measurement_updated"] = measurement_updated
 
         @st.cache_data
-        def convert_for_download(df):
-            return df.to_csv(na_rep="nan").encode("utf-8")
+        def convert_for_download(df, index_label):
+            return df.to_csv(na_rep="nan", index_label=index_label).encode("utf-8")
 
         # Assemble df for download
         df_download = chosen_measurement.validated_df.copy()
@@ -563,10 +563,17 @@ if do_plausibility_checks:
 
         df_download = df_download.rename(columns=dict(zip(df_download.columns, [measurement_updated.label_value + "_" + col for col in df_download.columns])))
         df_download = df_download.rename(columns={measurement_updated.label_value + "_" + "value": measurement_updated.label_value})
+        print(df_download)
         df_nonselect = d_p.df_to_datetime(measurement_updated.nonselected_df)
-        df_download = pd.concat([df_nonselect.iloc[:, 0:measurement_updated.selected_loc], df_download, df_nonselect.iloc[:, measurement_updated.selected_loc:]], axis=1, sort=True)
+        df_download = pd.concat([
+            df_nonselect.iloc[:, 0:measurement_updated.selected_loc],
+            chosen_measurement.return_df_as_datetime(raw=True).rename(columns={"value": measurement_updated.label_value + " (RAW)"}),
+            df_download,
+            df_nonselect.iloc[:, measurement_updated.selected_loc:]
+        ], axis=1, sort=True)
+        print(df_download)
 
-        csv = convert_for_download(df_download)
+        csv = convert_for_download(df_download, " ".join(chosen_measurement.label_date_time))
 
         st.download_button(
             label="Download validated time series",
