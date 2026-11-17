@@ -162,10 +162,11 @@ if chosen_measurement and show_measurement:
 
 if chosen_measurement and len(plot_nonselected)  + len(plot_measurements) != 0 and show_correlation:
     fig = make_subplots(rows=len(plot_nonselected)+len(plot_measurements), cols=1)
+    pd_nonsel = chosen_measurement.nonselected_df
+    pd_nonsel.index = pd_nonsel.index.map(d_p.unixtime_to_dt64)
     row = 1
     for key in plot_others:
         if key in plot_measurements:
-            pd_con = pd.concat([st.session_state["measurement_dict"][key].raw_df["value"], chosen_measurement.return_df_as_datetime(raw=True)["value"]], axis=1, sort=True)
             fig = fig.add_trace(go.Scatter(
                 x=st.session_state["measurement_dict"][key].raw_df["value"],
                 y=chosen_measurement.raw_df["value"],
@@ -174,7 +175,7 @@ if chosen_measurement and len(plot_nonselected)  + len(plot_measurements) != 0 a
                 row=row,col=1
             )
         elif key in plot_nonselected:
-            pd_con = pd.concat([chosen_measurement.nonselected_df[key], chosen_measurement.return_df_as_datetime(raw=True)["value"]], axis=1, sort=True)
+            pd_con = pd.concat([pd_nonsel[key], chosen_measurement.return_df_as_datetime(raw=True)['value']], axis=1, sort=True)
             fig = fig.add_trace(go.Scatter(
                 x=pd_con[key],
                 y=pd_con["value"],
@@ -563,7 +564,6 @@ if do_plausibility_checks:
 
         df_download = df_download.rename(columns=dict(zip(df_download.columns, [measurement_updated.label_value + "_" + col for col in df_download.columns])))
         df_download = df_download.rename(columns={measurement_updated.label_value + "_" + "value": measurement_updated.label_value})
-        print(df_download)
         df_nonselect = d_p.df_to_datetime(measurement_updated.nonselected_df)
         df_download = pd.concat([
             df_nonselect.iloc[:, 0:measurement_updated.selected_loc],
@@ -571,7 +571,6 @@ if do_plausibility_checks:
             df_download,
             df_nonselect.iloc[:, measurement_updated.selected_loc:]
         ], axis=1, sort=True)
-        print(df_download)
 
         csv = convert_for_download(df_download, " ".join(chosen_measurement.label_date_time))
 
