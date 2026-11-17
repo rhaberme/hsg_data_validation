@@ -217,6 +217,8 @@ if measurement_submit_button:
         st.session_state["measurement_dict"][measurement_instance.name] = measurement_instance
     st.success(f'The time series {name} has been successfully added.')
 
-if st.session_state["measurement_dict"]:
-    if st.button("Continue to Plausibility Tests", type="primary", key="continue_to_plausibility"):
-        st.switch_page("pages/3_Plausibility_tests.py")
+if st.session_state["measurement_dict"] and measurement_submit_button:
+    st.button("Continue to Plausibility Tests", type="primary", key="continue_to_plausibility")
+if st.session_state.get("continue_to_plausibility"):
+    st.switch_page("pages/3_Plausibility_tests.py")
+
